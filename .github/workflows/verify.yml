@@ -29,17 +29,11 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: |
-          set -o pipefail
-          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain --stacktrace 2>&1 | tee test_output.log || {
-            echo "=== AAR METADATA ERRORS ==="
-            grep -A 40 "checking AAR metadata" test_output.log | while IFS= read -r line; do
-              echo "::error::$line"
-            done
-            exit 1
-          }
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain
+      - name: Debug build
+        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
       - name: Debug build
         run: ./gradlew :app:assembleDebug --no-daemon --console=plain
 

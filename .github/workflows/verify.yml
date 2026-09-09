@@ -29,7 +29,14 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+        run: |
+          set -o pipefail
+          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee test.log || {
+            cat test.log | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+            exit 1
+          }
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain
       - name: Debug build

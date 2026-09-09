@@ -6,12 +6,14 @@ kotlin = "2.1.20"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
-# CEILING (2026-09-09): stay on the Compose 1.11 line until the project moves to
-# compileSdk 37 + AGP 9.2. BOM 2026.08.00 (Compose 1.12) declares minCompileSdk 37 /
-# min AGP 9.2 and fails `checkDebugAarMetadata` on AGP 8.7.3 (see AUDIT_REPORT §12).
-composeBom = "2026.04.01"
-# CEILING: navigation-compose 2.10+ likewise requires compileSdk 37 + AGP 9.2.
-navigation = "2.9.5"
+# CEILING (2026-09-09): Compose 1.11 (BOM 2026.04.01) could not be used either — its
+# custom lint checks crash lint 8.7.3 in initializeExtraRegistries, and only an
+# AGP 9 upgrade brings a compatible lint. Stay on the Dec-2024 coherent set
+# (written-for versions) until that upgrade. See AUDIT_REPORT §12.
+composeBom = "2024.12.01"
+# CEILING: navigation 2.9.x pulls Compose 1.9+ (breaking the coherent set above)
+# and needs the same AGP 9 upgrade. Revisit together with the BOM.
+navigation = "2.8.5"
 documentfile = "1.1.0"
 media3 = "1.11.0"
 coil = "2.7.0"

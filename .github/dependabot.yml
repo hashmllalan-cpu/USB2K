@@ -13,11 +13,14 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    # Version ceilings (2026-09-09): these artifacts require compileSdk 37 + AGP 9.2,
-    # which need the planned AGP 9 upgrade (compileSdk 37 SDK + KGP/Gradle cascade).
-    # Keep them pinned until that upgrade lands — see AUDIT_REPORT §12.
+    # Version ceilings (2026-09-09): newer releases need the planned AGP 9 upgrade.
+    # - compose-bom 2026.08.00+ requires compileSdk 37 + AGP 9.2 (AAR metadata);
+    #   2026.04.01 was also tried and crashes lint 8.7.3 (custom-check registry).
+    # - navigation 2.9.x pulls Compose 1.9+ (breaks the coherent 1.7 set below);
+    #   2.10+ requires compileSdk 37 + AGP 9.2.
+    # Keep pinned to the last verified set until the AGP 9 upgrade — AUDIT_REPORT §12.
     ignore:
       - dependency-name: "androidx.compose:compose-bom"
-        versions: [">= 2026.08.00"]
+        versions: ["> 2024.12.01"]
       - dependency-name: "androidx.navigation:navigation-compose"
-        versions: [">= 2.10"]
+        versions: [">= 2.9"]

@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.usbmediaexplorer"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.usbmediaexplorer"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 3
         versionName = "0.2.1"
 

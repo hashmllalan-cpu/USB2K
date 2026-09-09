@@ -181,6 +181,10 @@ class DocRepository(
     /**
      * URI suitable for ACTION_SEND / ACTION_VIEW from another app. File-backed nodes go through
      * the FileProvider so no `file://` URI ever leaks (FileUriExposedException).
+     *
+     * Only files under the FileProvider roots (`res/xml/file_paths.xml`: cache + shared
+     * external storage) can be shared — anything else (e.g. private filesDir history)
+     * yields null and the caller shows a failure toast instead of leaking access.
      */
     fun externalUri(node: DocNode): Uri? = runCatching {
         if (node.uri.scheme == ContentResolver.SCHEME_FILE) {

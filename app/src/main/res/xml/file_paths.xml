@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- Least privilege (SEC-02): only what DocRepository.externalUri() provably needs.
+         - cache-path entries serve staged thumbnails / shared copies.
+         - external-path is REQUIRED for sharing file-backed nodes under shared storage
+           (/storage/emulated/0/…); there is deliberately NO files-path entry so the
+           private filesDir history (favorites/recent/playback JSON, crash report)
+           can never be minted into a content:// URI.
+         Exposure stays minimal in practice: Intents.share/open/openWith grant a
+         single read-only, per-URI permission (FLAG_GRANT_READ_URI_PERMISSION). -->
     <cache-path
         name="thumbs"
         path="thumbs/" />
     <cache-path
         name="shared"
         path="shared/" />
-    <files-path
-        name="files"
-        path="." />
     <external-path
         name="external"
         path="." />

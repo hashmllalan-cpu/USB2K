@@ -31,11 +31,23 @@
 | Gradle | 8.9 (محدَّد في `gradle/wrapper/gradle-wrapper.properties`) |
 | Android Gradle Plugin | 8.7.3 |
 | Kotlin | 2.0.21 (مع `kotlin.plugin.compose`) |
-| compileSdk / targetSdk | 35 |
+| compileSdk / targetSdk | 36 |
 | minSdk | 24 (Android 7.0) |
 
 التطبيق **لا يحتاج إنترنت أثناء التشغيل**؛ الإنترنت مطلوب فقط لتنزيل اعتماديات Gradle
 أول مرة (AndroidX، Media3، Coil، Compose).
+
+### حزم Android SDK المطلوبة
+
+```bash
+sdkmanager --licenses
+sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools" \
+  "system-images;android-29;google_apis;x86_64" "system-images;android-35;google_apis;x86_64"
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties   # لا يُودَع في Git أبدًا
+```
+
+صور المحاكي للـAPI 29 و35 مطلوبة فقط لتشغيل `connectedDebugAndroidTest`
+محليًا (سير Verify يشغّلها على كل PR).
 
 ## 2. الفتح في Android Studio
 

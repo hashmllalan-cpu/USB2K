@@ -30,16 +30,11 @@ jobs:
         run: ./gradlew --version
       - name: Unit tests
         run: |
-          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain || {
-            echo "::error::Unit tests failed! Printing failure summaries:"
-            for f in $(find app/build/test-results/testDebugUnitTest -name "*.xml" 2>/dev/null); do
-              if grep -q "<failure" "$f"; then
-                echo "=========================================="
-                echo "FAILURES IN: $f"
-                echo "=========================================="
-                cat "$f"
-              fi
-            done
+          set -o pipefail
+          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain --stacktrace 2>&1 | tee test_output.log || {
+            echo "::error::Unit tests / compilation failed!"
+            echo "=== LAST 200 LINES OF BUILD LOG ==="
+            tail -n 200 test_output.log
             exit 1
           }
       - name: Lint

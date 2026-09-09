@@ -6,7 +6,7 @@ enum class PlaybackFailure {
     DECODER_UNSUPPORTED,
     PERMISSION_REVOKED,
     NETWORK_NOT_APPLICABLE,
-    UNKNOWN,
+    UNKNOWN;
 
     companion object {
         fun from(errorCodeName: String?, message: String?): PlaybackFailure {

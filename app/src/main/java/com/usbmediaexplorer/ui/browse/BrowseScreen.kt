@@ -187,8 +187,13 @@ fun BrowseScreen(
     }
 
     fun openWith(item: DocItem) {
-        val external = container.docRepository.externalUri(item.node)
-        val opened = external != null && Intents.openWith(context, item.node, external)
+        val external: android.net.Uri =
+            container.docRepository.externalUri(item.node)
+                ?: run {
+                    toast(context.getString(R.string.msg_no_app_to_open))
+                    return
+                }
+        val opened = Intents.openWith(context, item.node, external)
         if (!opened) toast(context.getString(R.string.msg_no_app_to_open))
     }
 

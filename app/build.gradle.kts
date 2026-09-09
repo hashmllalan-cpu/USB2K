@@ -159,6 +159,7 @@ dependencies {
     testImplementation(libs.org.json)
     testImplementation(libs.mockito.core)
     androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation(platform(libs.androidx.compose.bom))

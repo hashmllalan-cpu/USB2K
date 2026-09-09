@@ -82,11 +82,12 @@ jobs:
           arch: x86_64
           target: google_apis
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          # bash wrapper: the script shell is sh (no pipefail), so run Gradle under
-          # bash for a truthful exit code, then triage failures into annotations.
+          # bash wrapper: the script shell is sh (no pipefail) with errexit, so run
+          # Gradle under bash for a truthful exit code, capture it via || (which
+          # is exempt from errexit), then triage failures into annotations.
           script: |-
-            bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log'
-            code=$?
+            code=0
+            bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log' || code=$?
             if [ "$code" -ne 0 ]; then
               python3 .github/workflows/report_failure.py connected.log "Smoke(API ${{ matrix.api-level }})"
             fi

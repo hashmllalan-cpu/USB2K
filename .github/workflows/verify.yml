@@ -29,7 +29,19 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+        run: |
+          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain || {
+            echo "::error::Unit tests failed! Printing failure summaries:"
+            for f in $(find app/build/test-results/testDebugUnitTest -name "*.xml" 2>/dev/null); do
+              if grep -q "<failure" "$f"; then
+                echo "=========================================="
+                echo "FAILURES IN: $f"
+                echo "=========================================="
+                cat "$f"
+              fi
+            done
+            exit 1
+          }
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain
       - name: Debug build

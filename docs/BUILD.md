@@ -31,12 +31,12 @@
 | Gradle | 8.9 (محدَّد في `gradle/wrapper/gradle-wrapper.properties`) |
 | Android Gradle Plugin | 8.7.3 |
 | Kotlin | 2.0.21 (مع `kotlin.plugin.compose`) |
-| compileSdk / targetSdk | 35 |
+| compileSdk / targetSdk | 36 |
 | minSdk | 24 (Android 7.0) |
 
 حزم Android SDK المطلوبة للتطوير المحلي عبر `sdkmanager`:
 ```bash
-sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
 ```
 
 التطبيق **لا يحتاج إنترنت أثناء التشغيل**؛ الإنترنت مطلوب فقط لتنزيل اعتماديات Gradle

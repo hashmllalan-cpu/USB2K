@@ -109,7 +109,7 @@ USB / SD / Internal storage
 
 ## البناء والتشغيل
 
-المتطلبات: JDK 17 وAndroid SDK 35 وبيئة Gradle قابلة للتنفيذ.
+المتطلبات: JDK 17 وAndroid SDK 36 وبيئة Gradle قابلة للتنفيذ.
 
 ```bash
 ./gradlew --version

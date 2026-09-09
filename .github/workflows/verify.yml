@@ -29,15 +29,11 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: |
-          set -o pipefail
-          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee test.log || {
-            ERR_MSG="$(tail -n 40 test.log | tr '\n' ' ')"
-            echo "::error::$ERR_MSG"
-            exit 1
-          }
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain
+      - name: Debug build
+        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
       - name: Debug build
         run: ./gradlew :app:assembleDebug --no-daemon --console=plain
       - name: Debug build

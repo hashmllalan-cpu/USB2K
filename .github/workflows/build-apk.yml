@@ -73,6 +73,14 @@ jobs:
             echo "::warning::USBMEDIA_KEYSTORE_B64 is not configured - release build will be skipped, debug APK will still be produced."
           fi
 
+      # Tags exist to publish a release — silently skipping it would leave a green run
+      # with no APK. Manual dispatches may still produce the debug APK without secrets.
+      - name: Require signing secrets on release tags
+        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has_signing != 'true'
+        run: |
+          echo "::error::Tag ${{ github.ref }} needs USBMEDIA_KEYSTORE_B64 + passwords to publish a signed release."
+          exit 1
+
       - name: Build debug APK
         id: build
         continue-on-error: true
@@ -175,6 +183,20 @@ jobs:
 
       # المسار الصريح app-release.apk مع if-no-files-found=error يعني أن بناءً غير موقّع
       # (app-release-unsigned.apk) لا يمكن أن يتسرب إلى النشر أبدًا.
+      # Prove the APK is really signed by the rotated key before anything publishes it,
+      # and leave the certificate fingerprints in the log for rotation audits (REL-02).
+      - name: Verify release signature (apksigner)
+        if: steps.release_build.outcome == 'success'
+        run: |
+          set -o pipefail
+          APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found under $ANDROID_HOME/build-tools"
+            exit 1
+          fi
+          "$APKSIGNER" verify --verbose --print-certs \
+            app/build/outputs/apk/release/app-release.apk 2>&1 | tee apksigner.log
+
       - name: Upload release APK
         if: steps.release_build.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0

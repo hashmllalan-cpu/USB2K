@@ -30,7 +30,7 @@
 | JDK | 17 (المدمج في Android Studio يكفي) |
 | Gradle | 8.9 (محدَّد في `gradle/wrapper/gradle-wrapper.properties`) |
 | Android Gradle Plugin | 8.7.3 |
-| Kotlin | 2.0.21 (مع `kotlin.plugin.compose`) |
+| Kotlin | 2.1.20 (مع `kotlin.plugin.compose`) |
 | compileSdk / targetSdk | 36 |
 | minSdk | 24 (Android 7.0) |
 

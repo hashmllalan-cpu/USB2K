@@ -42,28 +42,43 @@ jobs:
           python3 <<'EOF'
           import glob, os, re, xml.etree.ElementTree as ET
 
-          lines = []
+          key = []
+          extra = []
           if os.path.exists("unit-tests.log"):
               with open("unit-tests.log", errors="replace") as f:
                   log = f.read().splitlines()
-              lines += [l.strip() for l in log if re.search(r"> Task .* FAILED", l)][:10]
+              key += [l.strip() for l in log if re.search(r"> Task .* FAILED", l)][:6]
+              for l in log:
+                  s = l.strip()
+                  if re.match(r"e: .*\.kt", s) and s not in key:
+                      key.append(s[:300])
+                  elif s.startswith("Caused by:") and s not in key:
+                      key.append(s[:300])
+              # Frames after the LAST "Caused by:" are the deepest cause stack: they name
+              # the exact compiler phase/checker that crashed (outer frames are just handlers).
+              causes = [i for i, l in enumerate(log) if l.strip().startswith("Caused by:")]
+              if causes:
+                  for l in log[causes[-1] + 1:causes[-1] + 80]:
+                      s = l.strip()
+                      if s.startswith("..."):
+                          continue
+                      m = re.match(r"at ([\w$.]+)", s)
+                      if m:
+                          if "org.jetbrains.kotlin" in m.group(1):
+                              frame = "FRAME: " + m.group(1)
+                              if frame not in key and len(key) < 24:
+                                  key.append(frame)
+                          continue
+                      break
               m = next((i for i, l in enumerate(log) if l.strip() == "What went wrong:"), None)
               if m is not None:
-                  lines += ["What went wrong:"] + [l.strip() for l in log[m + 1:m + 9] if l.strip()]
-              pat = re.compile(r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires|error:|e: .*\.kt|FAILED|Caused by:|\s+at org\.jetbrains\.kotlin|Wiring error|Unsupported class file")
+                  extra += ["What went wrong:"] + [l.strip() for l in log[m + 1:m + 9] if l.strip()]
+              pat = re.compile(r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires|error:|FAILED")
               for l in log:
                   s = l.strip()
-                  if re.match(r"at org\.jetbrains\.kotlin\.[A-Za-z0-9_.]+", s):
-                      s = "FRAME: " + re.sub(r"\(.+", "", s)
-                      if s not in lines:
-                          lines.append(s)
-              if len([l for l in lines if l.startswith("FRAME:")]) >= 12:
-                  lines = [l for l in lines if not l.startswith("FRAME:")] + [l for l in lines if l.startswith("FRAME:")][:12]
-              for l in log:
-                  s = l.strip()
-                  if pat.search(s) and s not in lines:
-                      lines.append(s)
-                      if len(lines) >= 30:
+                  if pat.search(s) and s not in key and s not in extra:
+                      extra.append(s)
+                      if len(extra) >= 20:
                           break
           failed_tests = []
           for path in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
@@ -78,7 +93,8 @@ jobs:
                   if node is not None:
                       msg = (node.get("message") or "")[:160]
                       failed_tests.append(f"{tc.get('classname')}.{tc.get('name')}: {msg}")
-          lines += [f"FAILING TEST: {t}" for t in failed_tests[:15]]
+          key += [f"FAILING TEST: {t}" for t in failed_tests[:15]]
+          lines = key + [e for e in extra if e not in key]
           if not lines:
               lines = ["Unit tests step failed but no cause excerpt matched (see raw log)."]
 
@@ -88,9 +104,9 @@ jobs:
                   f.write("### Unit-test failure excerpt\n```\n" + "\n".join(lines[:60]) + "\n```\n")
 
           def esc(s):
-              return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")[:5000]
+              return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")[:6000]
 
-          print("::error::" + esc(" | ".join(lines[:12])))
+          print("::error::" + esc(" | ".join((key or lines)[:16])))
           EOF
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain

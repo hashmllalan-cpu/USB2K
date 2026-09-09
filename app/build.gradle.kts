@@ -153,6 +153,9 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Real org.json (android.jar stubs return null) + Mockito for android.net.Uri fakes.
+    testImplementation(libs.org.json)
+    testImplementation(libs.mockito.core)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")

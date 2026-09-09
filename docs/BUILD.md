@@ -4,15 +4,17 @@
 
 لا تحتاج Android Studio ولا أي أدوات محلية:
 
-1. ادفع أي commit إلى الفرع (أو افتح تبويب **Actions** في المستودع).
-2. سير العمل **Build APK** (`.github/workflows/build-apk.yml`) يعمل على كل **وسم**
-   (`tags: [ 'v*' ]`) أو يدويًا عبر **Run workflow** من تبويب Actions.
-3. بعد ~5–10 دقائق تحصل على الملف من أحد مكانين:
-   - **Releases** → [`apk-latest`](https://github.com/Hesham777777/USB-Media-Explorer/releases/tag/apk-latest)
-     → نزّل `USB-Media-Explorer-debug.apk` (رابط ثابت يتحدث مع كل بناء ناجح)، أو
-   - تشغيل السير نفسه → قسم **Artifacts** → `USB-Media-Explorer-debug-apk`.
-4. انقل `USB-Media-Explorer-debug.apk` إلى الهاتف وثبّته مباشرة
-   (نسخة debug موقّعة بمفتاح التطوير، لذلك يلزم تفعيل «تثبيت من مصادر غير معروفة»).
+1. سير العمل **Build APK** (`.github/workflows/build-apk.yml`) يعمل على كل **وسم**
+   (`tags: [ 'v*' ]`) أو يدويًا عبر **Run workflow** من تبويب Actions —
+   الدفع العادي إلى الفروع لا يبني APK.
+2. بعد ~5–10 دقائق تحصل على الملف من أحد مكانين:
+   - **Releases** → [`apk-latest`](https://github.com/hashmllalan-cpu/USB2K/releases/tag/apk-latest)
+     → نزّل `app-release.apk` — **النسخة الموصى بها والوحيدة المنشورة**:
+     موقّعة ومصغّرة بـ R8 (رابط ثابت يتحدث مع كل بناء ناجح)، أو
+   - تشغيل السير نفسه → قسم **Artifacts** → `USB-Media-Explorer-debug-apk`
+     (للمطورين فقط — نسخة debug لم تعد تُنشر في الـReleases العامة).
+3. انقل الملف إلى الهاتف وثبّته مباشرة (مع تفعيل «التثبيت من مصادر غير معروفة»
+   عند الطلب).
 
 ملاحظات:
 - عند رفع وسم مثل `v1.0.0` يُنشئ السير **Release** مرفقًا به ملف الـAPK.

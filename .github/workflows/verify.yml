@@ -82,19 +82,11 @@ jobs:
           arch: x86_64
           target: google_apis
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          # The emulator action's script shell is sh with errexit and its cwd is not
-          # guaranteed: cd explicitly, capture Gradle's code via || (exempt from
-          # errexit), and breadcrumb via ::notice:: (nested-step annotations are
-          # the only output channel readable without the raw log).
+          # NOTE: the emulator action runs each script line in a FRESH shell (no
+          # variables/cd persist — proven by empty $code + exit 2). Keep every line
+          # independent: one breadcrumb plus ONE self-contained bash -c holding the
+          # whole Gradle-invoke/triage/exit flow. Nested ::notice::/::error:: output
+          # surfaces as job annotations (the only channel without the raw log).
           script: |-
-            echo "::notice::SMOKE_DIAG start pwd=$(pwd) workspace=${GITHUB_WORKSPACE:-<unset>}"
-            cd "${GITHUB_WORKSPACE:-$PWD}" || exit 111
-            echo "::notice::SMOKE_DIAG workdir=$(pwd) gradlew=$(test -x ./gradlew && echo yes || echo NO) triage=$(test -f .github/workflows/report_failure.py && echo yes || echo NO)"
-            code=0
-            bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log' || code=$?
-            echo "::notice::SMOKE_DIAG gradle_exit=$code"
-            if [ "$code" -ne 0 ]; then
-              python3 .github/workflows/report_failure.py connected.log "Smoke(API ${{ matrix.api-level }})" || echo "::warning::SMOKE_DIAG triage_failed=$?"
-            fi
-            echo "::notice::SMOKE_DIAG_END exit=$code"
-            exit $code
+            echo "::notice::SMOKE_WRAPPER alive"
+            bash -o pipefail -c 'cd "${GITHUB_WORKSPACE}" && echo "::notice::SMOKE start $(pwd)" && ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log; code=${PIPESTATUS[0]}; echo "::notice::SMOKE gradle_exit=$code"; if [ "$code" -ne 0 ]; then python3 .github/workflows/report_failure.py connected.log "Smoke(API ${{ matrix.api-level }})"; fi; exit $code'

@@ -115,6 +115,8 @@ android {
     lint {
         abortOnError = false
         warningsAsErrors = false
+        // Plain-text report: mined by the CI failure-triage step on lint crashes.
+        textReport = true
     }
 }
 

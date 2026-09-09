@@ -31,28 +31,26 @@ def main() -> None:
                 key.append(stripped[:300])
             elif stripped.startswith("Caused by:") and stripped not in key:
                 key.append(stripped[:300])
-        # Frames after the LAST "Caused by:" are the deepest cause stack: they name
-        # the exact failing phase (outer frames are just handler noise).
-        causes = [i for i, line in enumerate(log) if line.strip().startswith("Caused by:")]
-        if causes:
-            for line in log[causes[-1] + 1:causes[-1] + 80]:
-                stripped = line.strip()
-                if stripped.startswith("..."):
-                    continue
-                m = re.match(r"at ([\w$.]+)", stripped)
-                if m:
-                    if "org.jetbrains.kotlin" in m.group(1) or "com.android" in m.group(1):
-                        frame = "FRAME: " + m.group(1)
-                        if frame not in key and len(key) < 24:
-                            key.append(frame)
-                    continue
-                break
+        # Stack frames anywhere in the log (dumb global collect — cause-positioning
+        # proved brittle). The log lists outer-wrapper stacks first, so the annotation
+        # keeps the LAST frames (deepest cause); the summary keeps them all.
+        frames: list[str] = []
+        for line in log:
+            m = re.match(r"at ([\w$.]+)\(", line.strip())
+            if m and ("com.android" in m.group(1) or "org.jetbrains.kotlin" in m.group(1)):
+                frame = "FRAME: " + m.group(1)
+                if frame not in frames and len(frames) < 80:
+                    frames.append(frame)
+        key += [f for f in frames[-12:] if f not in key]
+        if frames:
+            extra.append("--- deepest compiler/lint frames (oldest first) ---")
+            extra += frames
         m = next((i for i, line in enumerate(log) if line.strip() == "What went wrong:"), None)
         if m is not None:
             extra += ["What went wrong:"] + [line.strip() for line in log[m + 1:m + 9] if line.strip()]
         pat = re.compile(
             r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires"
-            r"|Lint [Ee]rror|Lint found|error:|FAILED"
+            r"|Lint [Ee]rror|Lint found|Unexpected failure|requires .*lint|ObsoleteLint|NoSuchMethod|NoClassDefFound|error:|FAILED"
         )
         for line in log:
             stripped = line.strip()
@@ -60,6 +58,15 @@ def main() -> None:
                 extra.append(stripped)
                 if len(extra) >= 20:
                     break
+    # Lint crashes also leave details in the text report when it was written.
+    for report in glob.glob("app/build/reports/lint-results-*.txt"):
+        try:
+            with open(report, errors="replace") as f:
+                report_lines = [line.strip() for line in f.read().splitlines() if line.strip()]
+            extra.append(f"--- {report} ({len(report_lines)} lines) ---")
+            extra += report_lines[:25]
+        except OSError:
+            continue
     failed_tests: list[str] = []
     for path in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
         try:

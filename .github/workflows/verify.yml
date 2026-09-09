@@ -29,7 +29,32 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain --stacktrace --info
+        id: unit_tests
+        continue-on-error: true
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+
+      - name: Report and fail on unit test errors
+        if: steps.unit_tests.outcome == 'failure'
+        run: |
+          echo "::group::Test Results XML"
+          for f in $(find app/build/test-results/testDebugUnitTest -name "*.xml" 2>/dev/null); do
+            if grep -q "<failure" "$f"; then
+              echo "=== Test Failure Details in $f ==="
+              cat "$f"
+            fi
+          done
+          echo "::endgroup::"
+          echo "::error::Unit tests failed. See details above."
+          exit 1
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
+
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon --console=plain
       - name: Debug build

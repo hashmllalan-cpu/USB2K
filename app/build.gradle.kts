@@ -101,6 +101,17 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+    // Keep CI failure logs readable: only failed/skipped tests print, with short stack traces.
+    tasks.withType<Test>().configureEach {
+        testLogging {
+            events("failed", "skipped")
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.SHORT
+        }
+    }
+
     lint {
         abortOnError = false
         warningsAsErrors = false

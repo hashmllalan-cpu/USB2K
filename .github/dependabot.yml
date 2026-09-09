@@ -13,3 +13,11 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    # Version ceilings (2026-09-09): these artifacts require compileSdk 37 + AGP 9.2,
+    # which need the planned AGP 9 upgrade (compileSdk 37 SDK + KGP/Gradle cascade).
+    # Keep them pinned until that upgrade lands — see AUDIT_REPORT §12.
+    ignore:
+      - dependency-name: "androidx.compose:compose-bom"
+        versions: [">= 2026.08.00"]
+      - dependency-name: "androidx.navigation:navigation-compose"
+        versions: [">= 2.10"]

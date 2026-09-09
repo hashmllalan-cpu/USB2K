@@ -4,8 +4,12 @@ kotlin = "2.0.21"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2026.08.00"
-navigation = "2.10.0"
+# CEILING (2026-09-09): stay on the Compose 1.11 line until the project moves to
+# compileSdk 37 + AGP 9.2. BOM 2026.08.00 (Compose 1.12) declares minCompileSdk 37 /
+# min AGP 9.2 and fails `checkDebugAarMetadata` on AGP 8.7.3 (see AUDIT_REPORT §12).
+composeBom = "2026.04.01"
+# CEILING: navigation-compose 2.10+ likewise requires compileSdk 37 + AGP 9.2.
+navigation = "2.9.5"
 documentfile = "1.1.0"
 media3 = "1.11.0"
 coil = "2.7.0"

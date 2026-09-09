@@ -53,22 +53,12 @@ jobs:
           java-version: "17"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.0
-      - name: Install Android emulator image
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platform-tools" "emulator" "platforms;android-${API_LEVEL}" "system-images;android-${API_LEVEL};google_apis;x86_64"
-          echo "no" | avdmanager create avd --force --name "qa-api-${API_LEVEL}" --package "system-images;android-${API_LEVEL};google_apis;x86_64" --device "pixel_2"
-      - name: Boot emulator
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
-        run: |
-          nohup emulator -avd "qa-api-${API_LEVEL}" -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect > emulator.log 2>&1 &
-          adb wait-for-device
-          adb shell settings put global window_animation_scale 0
-          adb shell settings put global transition_animation_scale 0
-          adb shell settings put global animator_duration_scale 0
-          timeout 180s adb shell getprop sys.boot_completed | grep -m 1 "1"
-      - name: Instrumented smoke tests
-        run: ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain
+
+      - name: Run instrumented tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain

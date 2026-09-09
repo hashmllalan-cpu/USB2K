@@ -25,7 +25,7 @@ androidxTestCore = "1.6.1"
 espresso = "3.6.1"
 # Pure-JVM test doubles: android.jar stubs return null under isReturnDefaultValues.
 json = "20240303"
-mockitoCore = "5.14.2"
+mockitoCore = "5.23.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

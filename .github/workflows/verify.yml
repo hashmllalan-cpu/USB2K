@@ -38,80 +38,23 @@ jobs:
       # fails because the Unit tests step above failed.
       - name: Report unit-test failure cause
         if: failure() && steps.unit_tests.conclusion == 'failure'
-        run: |
-          python3 <<'EOF'
-          import glob, os, re, xml.etree.ElementTree as ET
-
-          key = []
-          extra = []
-          if os.path.exists("unit-tests.log"):
-              with open("unit-tests.log", errors="replace") as f:
-                  log = f.read().splitlines()
-              key += [l.strip() for l in log if re.search(r"> Task .* FAILED", l)][:6]
-              for l in log:
-                  s = l.strip()
-                  if re.match(r"e: .*\.kt", s) and s not in key:
-                      key.append(s[:300])
-                  elif s.startswith("Caused by:") and s not in key:
-                      key.append(s[:300])
-              # Frames after the LAST "Caused by:" are the deepest cause stack: they name
-              # the exact compiler phase/checker that crashed (outer frames are just handlers).
-              causes = [i for i, l in enumerate(log) if l.strip().startswith("Caused by:")]
-              if causes:
-                  for l in log[causes[-1] + 1:causes[-1] + 80]:
-                      s = l.strip()
-                      if s.startswith("..."):
-                          continue
-                      m = re.match(r"at ([\w$.]+)", s)
-                      if m:
-                          if "org.jetbrains.kotlin" in m.group(1):
-                              frame = "FRAME: " + m.group(1)
-                              if frame not in key and len(key) < 24:
-                                  key.append(frame)
-                          continue
-                      break
-              m = next((i for i, l in enumerate(log) if l.strip() == "What went wrong:"), None)
-              if m is not None:
-                  extra += ["What went wrong:"] + [l.strip() for l in log[m + 1:m + 9] if l.strip()]
-              pat = re.compile(r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires|error:|FAILED")
-              for l in log:
-                  s = l.strip()
-                  if pat.search(s) and s not in key and s not in extra:
-                      extra.append(s)
-                      if len(extra) >= 20:
-                          break
-          failed_tests = []
-          for path in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
-              try:
-                  tree = ET.parse(path)
-              except ET.ParseError:
-                  continue
-              for tc in tree.getroot().iter("testcase"):
-                  node = tc.find("failure")
-                  if node is None:
-                      node = tc.find("error")
-                  if node is not None:
-                      msg = (node.get("message") or "")[:160]
-                      failed_tests.append(f"{tc.get('classname')}.{tc.get('name')}: {msg}")
-          key += [f"FAILING TEST: {t}" for t in failed_tests[:15]]
-          lines = key + [e for e in extra if e not in key]
-          if not lines:
-              lines = ["Unit tests step failed but no cause excerpt matched (see raw log)."]
-
-          summary = os.environ.get("GITHUB_STEP_SUMMARY")
-          if summary:
-              with open(summary, "a") as f:
-                  f.write("### Unit-test failure excerpt\n```\n" + "\n".join(lines[:60]) + "\n```\n")
-
-          def esc(s):
-              return s.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")[:6000]
-
-          print("::error::" + esc(" | ".join((key or lines)[:16])))
-          EOF
+        run: python3 .github/workflows/report_failure.py unit-tests.log "Unit-test"
       - name: Lint
-        run: ./gradlew :app:lintDebug --no-daemon --console=plain
+        id: lint
+        run: |
+          set -o pipefail
+          ./gradlew :app:lintDebug --no-daemon --console=plain --stacktrace 2>&1 | tee lint.log
+      - name: Report lint failure cause
+        if: failure() && steps.lint.conclusion == 'failure'
+        run: python3 .github/workflows/report_failure.py lint.log "Lint"
       - name: Debug build
-        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
+        id: debug_build
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace 2>&1 | tee build.log
+      - name: Report build failure cause
+        if: failure() && steps.debug_build.conclusion == 'failure'
+        run: python3 .github/workflows/report_failure.py build.log "Debug-build"
 
   instrumented-smoke:
     name: Instrumented smoke (API ${{ matrix.api-level }})

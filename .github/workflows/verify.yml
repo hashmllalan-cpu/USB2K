@@ -53,37 +53,12 @@ jobs:
           java-version: "17"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.0
-      - name: Install Android SDK command-line tools
-        run: |
-          # Persist ANDROID_SDK_ROOT for subsequent steps
-          echo "ANDROID_SDK_ROOT=$RUNNER_TEMP/android-sdk" >> $GITHUB_ENV
-          mkdir -p $RUNNER_TEMP/android-sdk/cmdline-tools
-          curl -L -o $RUNNER_TEMP/cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -q $RUNNER_TEMP/cmdline-tools.zip -d $RUNNER_TEMP/android-sdk/cmdline-tools
-          # Move to expected layout
-          mv $RUNNER_TEMP/android-sdk/cmdline-tools/cmdline-tools $RUNNER_TEMP/android-sdk/cmdline-tools/latest || true
-          # Add sdk tools and platform-tools to PATH for subsequent steps
-          echo "$RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$RUNNER_TEMP/android-sdk/platform-tools" >> $GITHUB_PATH
-          # Ensure sdkmanager is available in this step and accept licenses
-          export PATH="$RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$PATH"
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "emulator"
-      - name: Install Android emulator image
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
-        run: |
-          sdkmanager "platforms;android-${API_LEVEL}" "system-images;android-${API_LEVEL};google_apis;x86_64"
-          echo "no" | avdmanager create avd --force --name "qa-api-${API_LEVEL}" --package "system-images;android-${API_LEVEL};google_apis;x86_64" --device "pixel_2"
-      - name: Boot emulator
-        env:
-          API_LEVEL: ${{ matrix.api-level }}
-        run: |
-          nohup emulator -avd "qa-api-${API_LEVEL}" -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect > emulator.log 2>&1 &
-          adb wait-for-device
-          adb shell settings put global window_animation_scale 0
-          adb shell settings put global transition_animation_scale 0
-          adb shell settings put global animator_duration_scale 0
-          timeout 180s adb shell getprop sys.boot_completed | grep -m 1 "1"
-      - name: Instrumented smoke tests
-        run: ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain
+
+      - name: Run instrumented tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: google_apis
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
+          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain

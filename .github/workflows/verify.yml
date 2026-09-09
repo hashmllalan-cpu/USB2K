@@ -32,9 +32,8 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew :app:testDebugUnitTest --no-daemon --console=plain 2>&1 | tee test.log || {
-            cat test.log | while IFS= read -r line; do
-              echo "::error::$line"
-            done
+            ERR_MSG="$(tail -n 40 test.log | tr '\n' ' ')"
+            echo "::error::$ERR_MSG"
             exit 1
           }
       - name: Lint

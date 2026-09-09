@@ -50,7 +50,15 @@ jobs:
               m = next((i for i, l in enumerate(log) if l.strip() == "What went wrong:"), None)
               if m is not None:
                   lines += ["What went wrong:"] + [l.strip() for l in log[m + 1:m + 9] if l.strip()]
-              pat = re.compile(r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires|error:|e: .*\.kt|FAILED")
+              pat = re.compile(r"minCompileSdk|AAR metadata|Could not (resolve|find)|Dependency .* requires|error:|e: .*\.kt|FAILED|Caused by:|\s+at org\.jetbrains\.kotlin|Wiring error|Unsupported class file")
+              for l in log:
+                  s = l.strip()
+                  if re.match(r"at org\.jetbrains\.kotlin\.[A-Za-z0-9_.]+", s):
+                      s = "FRAME: " + re.sub(r"\(.+", "", s)
+                      if s not in lines:
+                          lines.append(s)
+              if len([l for l in lines if l.startswith("FRAME:")]) >= 12:
+                  lines = [l for l in lines if not l.startswith("FRAME:")] + [l for l in lines if l.startswith("FRAME:")][:12]
               for l in log:
                   s = l.strip()
                   if pat.search(s) and s not in lines:

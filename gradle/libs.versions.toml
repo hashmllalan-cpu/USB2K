@@ -24,7 +24,7 @@ androidxTestJunit = "1.2.1"
 androidxTestCore = "1.6.1"
 espresso = "3.6.1"
 # Pure-JVM test doubles: android.jar stubs return null under isReturnDefaultValues.
-json = "20240303"
+json = "20260814"
 mockitoCore = "5.14.2"
 
 [libraries]

@@ -1,0 +1,59 @@
+# Gradle / Android
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# App modules
+app/build/
+app/release/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Keystores (never commit signing material)
+*.jks
+*.keystore
+*.p12
+keystore/ci.p12
+
+# Logs / profiling
+ci-mapping.txt
+*.log
+*.hprof
+captures/
+
+# Editors
+*.swp
+*~
+
+# Android / Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# IDE
+*.iml
+.idea/
+.DS_Store
+
+# Signing keys and secrets
+*.p12
+*.jks
+*.keystore
+*.pem
+*.key
+keystore.properties
+.env
+.env.*
+secrets/
+license-keys/

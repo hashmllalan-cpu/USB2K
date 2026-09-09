@@ -55,8 +55,9 @@ jobs:
 
       # إن وُجد السر USBMEDIA_KEYSTORE_B64 يُكتب المفتاح الحقيقي (المُداوَر) إلى
       # keystore/ci.p12 — وهو ملف متجاهَل في .gitignore ولا يعود أبدًا إلى المستودع.
-      # غياب السر يفشل المهمة؛ لا يوجد مفتاح احتياطي داخل المستودع.
+      # غياب السر يتجاوز بناء release فقط؛ نسخة debug تُبنى دائمًا (REL-01).
       - name: Materialize signing keystore from secrets
+        id: signing
         env:
           KEYSTORE_B64: ${{ secrets.USBMEDIA_KEYSTORE_B64 }}
         run: |
@@ -65,11 +66,20 @@ jobs:
             printf "%s" "$KEYSTORE_B64" | base64 -d > keystore/ci.p12
             echo "USBMEDIA_KEYSTORE_PATH=$GITHUB_WORKSPACE/keystore/ci.p12" >> "$GITHUB_ENV"
             echo "SIGNING_SOURCE=github-secret" >> "$GITHUB_ENV"
+            echo "has_signing=true" >> "$GITHUB_OUTPUT"
             echo "Signing with the rotated key from repository secrets."
           else
-            echo "::error::USBMEDIA_KEYSTORE_B64 is required for release builds."
-            exit 1
+            echo "has_signing=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::USBMEDIA_KEYSTORE_B64 is not configured - release build will be skipped, debug APK will still be produced."
           fi
+
+      # Tags exist to publish a release — silently skipping it would leave a green run
+      # with no APK. Manual dispatches may still produce the debug APK without secrets.
+      - name: Require signing secrets on release tags
+        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has_signing != 'true'
+        run: |
+          echo "::error::Tag ${{ github.ref }} needs USBMEDIA_KEYSTORE_B64 + passwords to publish a signed release."
+          exit 1
 
       - name: Build debug APK
         id: build
@@ -152,7 +162,7 @@ jobs:
       # التشغيل وينشر الأخطاء في المستودع مثل نسخة debug تمامًا.
       - name: Build release APK (signed, R8)
         id: release_build
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && steps.signing.outputs.has_signing == 'true'
         continue-on-error: true
         env:
           USBMEDIA_STORE_PASSWORD: ${{ secrets.USBMEDIA_STORE_PASSWORD }}
@@ -173,6 +183,20 @@ jobs:
 
       # المسار الصريح app-release.apk مع if-no-files-found=error يعني أن بناءً غير موقّع
       # (app-release-unsigned.apk) لا يمكن أن يتسرب إلى النشر أبدًا.
+      # Prove the APK is really signed by the rotated key before anything publishes it,
+      # and leave the certificate fingerprints in the log for rotation audits (REL-02).
+      - name: Verify release signature (apksigner)
+        if: steps.release_build.outcome == 'success'
+        run: |
+          set -o pipefail
+          APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "::error::apksigner not found under $ANDROID_HOME/build-tools"
+            exit 1
+          fi
+          "$APKSIGNER" verify --verbose --print-certs \
+            app/build/outputs/apk/release/app-release.apk 2>&1 | tee apksigner.log
+
       - name: Upload release APK
         if: steps.release_build.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0

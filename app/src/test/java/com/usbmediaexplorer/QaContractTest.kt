@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito
 
 class QaContractTest {
     @Test
@@ -35,14 +36,18 @@ class QaContractTest {
         assertTrue(clock.now() >= 3000)
     }
 
-    private fun node(name: String, directory: Boolean, size: Long) = DocNode(
-        uri = Uri.parse("content://fake/$name"),
-        name = name,
-        isDirectory = directory,
-        size = size,
-        lastModified = 1L,
-        mimeType = null,
-        volumeId = "fake",
-        displayPath = if (directory) "root" else "root/$name",
-    )
+    private fun node(name: String, directory: Boolean, size: Long): DocNode {
+        val uri = Mockito.mock(Uri::class.java, Mockito.RETURNS_DEFAULTS)
+        Mockito.`when`(uri.toString()).thenReturn("content://fake/$name")
+        return DocNode(
+            uri = uri,
+            name = name,
+            isDirectory = directory,
+            size = size,
+            lastModified = 1L,
+            mimeType = null,
+            volumeId = "fake",
+            displayPath = if (directory) "root" else "root/$name",
+        )
+    }
 }

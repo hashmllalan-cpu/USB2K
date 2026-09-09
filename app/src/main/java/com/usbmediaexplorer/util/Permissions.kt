@@ -15,11 +15,9 @@ import androidx.core.content.ContextCompat
 /**
  * Runtime-permission helpers.
  *
- * Two routes unlock storage: the ordinary runtime permission (media on 13+, storage on older
- * versions — on legacy Android this covers removable mounts too), and the special all-files
- * access on Android 11+ ([hasAllFilesAccess]), which is the only way raw paths keep working for
- * non-media files there. Where neither route applies, a single SAF tree grant per removable
- * volume remains the fallback.
+ * The app uses Scoped Storage with media permissions for internal storage and
+ * Storage Access Framework (SAF) tree grants for external/removable USB volumes.
+ * The broad `MANAGE_EXTERNAL_STORAGE` permission is deliberately not requested.
  */
 object Permissions {
 
@@ -55,29 +53,11 @@ object Permissions {
         return list.toTypedArray()
     }
 
-    /** Android 11+ only: the special "All files access" app-op exists there and nowhere else. */
-    fun supportsAllFilesAccess(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-
     /**
-     * True when the user toggled "Allow access to manage all files" for this app. The only route
-     * that makes raw paths work for every file (documents, archives, non-media) on Android 11+,
-     * internal and removable alike.
+     * Combined gate: "can the app read the drives" — via media/storage permissions.
+     * Removable drives obtain access through explicit SAF tree grants.
      */
-    fun hasAllFilesAccess(): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()
-
-    /**
-     * Combined gate: "can the app read the drives" — via all-files access (11+) or via the
-     * ordinary media/storage permission. Callers should not care which route granted it.
-     */
-    fun hasStorageAccess(context: Context): Boolean =
-        hasAllFilesAccess() || hasMediaAccess(context)
-
-    /** The system screen where all-files access is toggled. Callers guard with [supportsAllFilesAccess]. */
-    fun allFilesAccessIntent(packageName: String): Intent = Intent(
-        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-        Uri.parse("package:$packageName"),
-    )
+    fun hasStorageAccess(context: Context): Boolean = hasMediaAccess(context)
 
     private fun granted(context: Context, permission: String): Boolean =
         ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED

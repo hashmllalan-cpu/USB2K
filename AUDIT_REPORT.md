@@ -388,7 +388,16 @@ Facade (`DocRepository`), Strategy (`FrameStrategy`, providers), Repository + `S
 
 ## 12. Remediation roadmap (prioritized, with estimates)
 
-> **Remediation log (2026-09-09, branch `arena/01a0861f-usb2k`):** REL-01 ✅ fixed — `Materialize signing keystore` now warns and sets `has_signing=false` instead of killing the whole job (`8517519`); release build gated on `has_signing`; tags without secrets fail loudly via `Require signing secrets on release tags`; REL-02 ✅ added `Verify release signature (apksigner)` gate. Debug APK + test/lint signal now work with zero secrets; signed release still needs the `USBMEDIA_*` secrets (§5.1). The `KEYSTORE_B64`-empty failure pasted from run `34352006834` came from the old workflow on `main`.
+> **Remediation log (2026-09-09, branch `arena/01a0864c-usb2k`):**
+> - **Phase 0 & Unit Tests Fix:** Unit tests root-cause resolved: added `org.json:json` and `org.mockito:mockito-core` test dependencies; hardened `Navigation.kt` with pure-JVM `encodeUri`; replaced stubbed Uri in `QaContractTest`; fixed `PlaybackFailure` classifier (BUG-01) with `errorCode` mapping and word-boundary regex (`\bSOURCE\b` vs `RESOURCE_EXHAUSTED`).
+> - **CI / Workflows:** Unified `setup-gradle` pinned SHA across workflows; pinned `android-emulator-runner` to immutable commit SHA (VRF-01/VRF-02); added R8 `mapping.txt` upload gate in `build-apk.yml` (REL-03).
+> - **Phase 1 Complete:**
+>   - **LIC-01:** Added official Apache-2.0 `LICENSE`.
+>   - **PRIV-01:** Added bilingual `PRIVACY.md` and `docs/PRIVACY_POLICY.md` (offline-first, zero telemetry).
+>   - **P0-3:** Cleaned dead `hasAllFilesAccess`/`MANAGE_EXTERNAL_STORAGE` code and comments from `Permissions.kt` & `VolumeRepository.kt`.
+>   - **SEC-02:** Narrowed `file_paths.xml` by dropping internal `files-path` exposure.
+>   - **SEC-03:** Updated `AndroidManifest.xml` targetApi to 36 and removed legacy storage request flag.
+>   - **DOC-01..04:** Corrected SDK 36 requirements, removed stale references to missing signing/tarball docs, updated release APK distribution documentation.
 
 **Effort scale:** XS <1 h · S 1–4 h · M 1–3 d · L 1–2 w. All phases assume one Android engineer with a JDK 17 + SDK 36 workstation (or CI access).
 

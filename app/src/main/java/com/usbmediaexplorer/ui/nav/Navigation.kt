@@ -21,22 +21,31 @@ object Routes {
     /** Set when the browser should open a folder with every item already selected (spec §8). */
     const val ARG_SELECT = "select"
 
-    fun browse(uri: Uri, selectAll: Boolean = false): String = buildString {
-        append("$BROWSE?$ARG_URI=${Uri.encode(uri.toString())}")
+    /** Safe URI parameter encoder that works both on Android and pure JVM test environments. */
+    fun encodeUri(uriString: String): String =
+        runCatching { Uri.encode(uriString) }.getOrNull()
+            ?: java.net.URLEncoder.encode(uriString, "UTF-8").replace("+", "%20")
+
+    fun browse(uri: Uri, selectAll: Boolean = false): String = browse(uri?.toString().orEmpty(), selectAll)
+    fun browse(uriString: String, selectAll: Boolean = false): String = buildString {
+        append("$BROWSE?$ARG_URI=${encodeUri(uriString)}")
         if (selectAll) append("&$ARG_SELECT=true")
     }
 
-    fun player(uri: Uri, folderUri: Uri?): String = buildString {
-        append("$PLAYER?$ARG_URI=${Uri.encode(uri.toString())}")
-        if (folderUri != null) append("&$ARG_FOLDER=${Uri.encode(folderUri.toString())}")
+    fun player(uri: Uri, folderUri: Uri?): String = player(uri?.toString().orEmpty(), folderUri?.toString())
+    fun player(uriString: String, folderUriString: String? = null): String = buildString {
+        append("$PLAYER?$ARG_URI=${encodeUri(uriString)}")
+        if (folderUriString != null) append("&$ARG_FOLDER=${encodeUri(folderUriString)}")
     }
 
-    fun image(uri: Uri, folderUri: Uri?): String = buildString {
-        append("$IMAGE?$ARG_URI=${Uri.encode(uri.toString())}")
-        if (folderUri != null) append("&$ARG_FOLDER=${Uri.encode(folderUri.toString())}")
+    fun image(uri: Uri, folderUri: Uri?): String = image(uri?.toString().orEmpty(), folderUri?.toString())
+    fun image(uriString: String, folderUriString: String? = null): String = buildString {
+        append("$IMAGE?$ARG_URI=${encodeUri(uriString)}")
+        if (folderUriString != null) append("&$ARG_FOLDER=${encodeUri(folderUriString)}")
     }
 
-    fun search(rootUri: Uri): String = "$SEARCH?$ARG_URI=${Uri.encode(rootUri.toString())}"
+    fun search(rootUri: Uri): String = search(rootUri?.toString().orEmpty())
+    fun search(rootUriString: String): String = "$SEARCH?$ARG_URI=${encodeUri(rootUriString)}"
 
     fun browseRoute(): String = "$BROWSE?$ARG_URI={$ARG_URI}&$ARG_SELECT={$ARG_SELECT}"
     fun playerRoute(): String = "$PLAYER?$ARG_URI={$ARG_URI}&$ARG_FOLDER={$ARG_FOLDER}"

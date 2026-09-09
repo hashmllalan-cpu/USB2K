@@ -249,11 +249,12 @@ class VolumeRepository(
             // File.canRead() is not a permission check — on Android 10+ it answers true for a
             // removable mount even with every permission denied, which used to show a "ready"
             // USB drive that then listed nothing. Probe for real, and only where the platform
-            // lets raw paths work at all: legacy Android 10, or all-files access on 11+.
+            // lets raw paths work at all: legacy Android 10 or older. Removable USB drives
+            // on modern Android (11+) rely on explicit SAF tree grants.
             val rawRemovablePossible = when {
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.Q -> true
                 Build.VERSION.SDK_INT == Build.VERSION_CODES.Q -> Environment.isExternalStorageLegacy()
-                else -> Permissions.hasAllFilesAccess()
+                else -> false
             }
             val pathReadable = rawRemovablePossible && storageAccess &&
                 dirFile?.let { runCatching { it.listFiles() }.getOrNull() } != null

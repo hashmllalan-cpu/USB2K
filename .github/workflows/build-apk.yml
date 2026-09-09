@@ -206,6 +206,15 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload ProGuard/R8 mapping
+        if: steps.release_build.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0
+        with:
+          name: USB-Media-Explorer-mapping
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: warn
+          retention-days: 30
+
       # الأصول القديمة (غير الموقّعة، ونسخ debug المنشورة سابقًا) تُحذف من الـRelease حتى
       # يبقى ملف واحد موقّع هو التسليم الرسمي.
       - name: Remove legacy release assets
@@ -233,7 +242,7 @@ jobs:
 
             كل إصدار جديد يُثبَّت **فوق** الإصدار السابق مباشرة ويحافظ على بيانات المستخدم
             (المفضلة، المجلدات الأخيرة، مواضع التشغيل، كاش المصغرات).
-            استثناء لمرة واحدة: بعد تدوير مفتاح التوقيع (SETUP_SIGNING.md) ستختلف البصمة،
+            استثناء لمرة واحدة: بعد تدوير مفتاح التوقيع (README.md §6) ستختلف البصمة،
             فيلزم إزالة تثبيت النسخة القديمة يدويًا قبل تثبيت أول نسخة بالمفتاح الجديد.
 
             نسخة debug لم تعد تُنشر هنا لأسباب أمنية؛ تبقى متاحة للمطورين كـartifact داخل

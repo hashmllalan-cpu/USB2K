@@ -8,17 +8,17 @@
 2. سير العمل **Build APK** (`.github/workflows/build-apk.yml`) يعمل على كل **وسم**
    (`tags: [ 'v*' ]`) أو يدويًا عبر **Run workflow** من تبويب Actions.
 3. بعد ~5–10 دقائق تحصل على الملف من أحد مكانين:
-   - **Releases** → [`apk-latest`](https://github.com/Hesham777777/USB-Media-Explorer/releases/tag/apk-latest)
-     → نزّل `USB-Media-Explorer-debug.apk` (رابط ثابت يتحدث مع كل بناء ناجح)، أو
-   - تشغيل السير نفسه → قسم **Artifacts** → `USB-Media-Explorer-debug-apk`.
-4. انقل `USB-Media-Explorer-debug.apk` إلى الهاتف وثبّته مباشرة
-   (نسخة debug موقّعة بمفتاح التطوير، لذلك يلزم تفعيل «تثبيت من مصادر غير معروفة»).
+   - **Releases** → [`apk-latest`](../../releases/tag/apk-latest)
+     → نزّل `app-release.apk` (النسخة الرسمية الموقّعة والمصغّرة بـ R8)، أو
+   - تشغيل السير نفسه → قسم **Artifacts** → `USB-Media-Explorer-debug-apk` (نسخة التطوير).
+4. انقل `app-release.apk` (أو نسخة debug) إلى الهاتف وثبّته مباشرة
+   (يلزم تفعيل «تثبيت من مصادر غير معروفة» عند التثبيت اليدوي).
 
 ملاحظات:
-- عند رفع وسم مثل `v1.0.0` يُنشئ السير **Release** مرفقًا به ملف الـAPK.
+- عند رفع وسم مثل `v1.0.0` يُنشئ السير **Release** رسميًا مرفقًا به ملف الـAPK الموقّع.
 - نسخة `release` موقّعة بالمفتاح المُدَوَّر القادم من أسرار المستودع
   (`USBMEDIA_KEYSTORE_B64` + `USBMEDIA_STORE_PASSWORD`/`USBMEDIA_KEY_ALIAS`/`USBMEDIA_KEY_PASSWORD`)؛
-  ويفشل البناء عند غيابها — لا يوجد مفتاح احتياطي داخل المستودع.
+  ويفشل بناء الوسوم التلقائي عند غياب الأسرار لحماية التوزيع الرسمي.
 - `gradle-wrapper.jar` **مودَع في المستودع** (`gradle/wrapper/gradle-wrapper.jar`) مع
   `distributionSha256Sum` مثبَّت، لذا يعمل `./gradlew` مباشرة دون توليد الغلاف.
 
@@ -27,12 +27,17 @@
 | الأداة | الإصدار |
 |---|---|
 | Android Studio | Ladybug (2024.2) أو أحدث |
-| JDK | 17 (المدمج في Android Studio يكفي) |
+| JDK | 17 (المدمج في Android Studio أو Eclipse Temurin 17) |
 | Gradle | 8.9 (محدَّد في `gradle/wrapper/gradle-wrapper.properties`) |
 | Android Gradle Plugin | 8.7.3 |
 | Kotlin | 2.0.21 (مع `kotlin.plugin.compose`) |
-| compileSdk / targetSdk | 35 |
+| compileSdk / targetSdk | 36 |
 | minSdk | 24 (Android 7.0) |
+
+حزم Android SDK المطلوبة للتطوير المحلي عبر `sdkmanager`:
+```bash
+sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+```
 
 التطبيق **لا يحتاج إنترنت أثناء التشغيل**؛ الإنترنت مطلوب فقط لتنزيل اعتماديات Gradle
 أول مرة (AndroidX، Media3، Coil، Compose).

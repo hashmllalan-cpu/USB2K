@@ -47,6 +47,7 @@ fun DetailsSheet(
     onDismiss: () -> Unit,
     onOpen: () -> Unit,
     onShare: () -> Unit,
+    onCopy: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -91,8 +92,7 @@ fun DetailsSheet(
             HorizontalDivider()
 
             InfoRow(stringResource(R.string.label_path), node.displayPath)
-            if (!node.isDirectory && node.extension.isNotEmpty()) {
-                InfoRow(
+            if (!node.isDirectory && node.extension.isNotEmpty()) {                InfoRow(
                     stringResource(R.string.label_extension),
                     node.extension.uppercase(java.util.Locale.US),
                 )
@@ -149,7 +149,6 @@ fun DetailsSheet(
                     )
                 }
             }
-            state.volumeName?.let { InfoRow(stringResource(R.string.label_storage), it) }
 
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -193,10 +192,12 @@ fun DetailsSheet(
             }
             if (!node.isDirectory) {
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = onShare, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.action_copy))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(onClick = onCopy, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Outlined.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.action_copy))
+                    }
                 }
             }
         }

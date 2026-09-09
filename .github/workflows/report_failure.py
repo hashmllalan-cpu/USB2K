@@ -68,7 +68,13 @@ def main() -> None:
         except OSError:
             continue
     failed_tests: list[str] = []
-    for path in glob.glob("app/build/test-results/testDebugUnitTest/*.xml"):
+    result_globs = [
+        "app/build/test-results/testDebugUnitTest/*.xml",
+        "app/build/outputs/androidTest-results/connected/*.xml",
+        "app/build/outputs/androidTest-results/connected/**/*.xml",
+    ]
+    result_files = [p for g in result_globs for p in glob.glob(g, recursive=True)]
+    for path in result_files:
         try:
             tree = ET.parse(path)
         except ET.ParseError:

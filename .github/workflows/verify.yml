@@ -29,11 +29,32 @@ jobs:
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
+        id: unit_tests
+        run: |
+          set -o pipefail
+          ./gradlew :app:testDebugUnitTest --no-daemon --console=plain --stacktrace 2>&1 | tee unit-tests.log
+      # Failure triage without opening the raw log: the error excerpt lands in the run
+      # summary AND as a check annotation (visible via the Checks API). The job still
+      # fails because the Unit tests step above failed.
+      - name: Report unit-test failure cause
+        if: failure() && steps.unit_tests.conclusion == 'failure'
+        run: python3 .github/workflows/report_failure.py unit-tests.log "Unit-test"
       - name: Lint
-        run: ./gradlew :app:lintDebug --no-daemon --console=plain
+        id: lint
+        run: |
+          set -o pipefail
+          ./gradlew :app:lintDebug --no-daemon --console=plain --stacktrace 2>&1 | tee lint.log
+      - name: Report lint failure cause
+        if: failure() && steps.lint.conclusion == 'failure'
+        run: python3 .github/workflows/report_failure.py lint.log "Lint"
       - name: Debug build
-        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
+        id: debug_build
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace 2>&1 | tee build.log
+      - name: Report build failure cause
+        if: failure() && steps.debug_build.conclusion == 'failure'
+        run: python3 .github/workflows/report_failure.py build.log "Debug-build"
 
   instrumented-smoke:
     name: Instrumented smoke (API ${{ matrix.api-level }})
@@ -61,4 +82,13 @@ jobs:
           arch: x86_64
           target: google_apis
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain
+          # bash wrapper: the script shell is sh (no pipefail) with errexit, so run
+          # Gradle under bash for a truthful exit code, capture it via || (which
+          # is exempt from errexit), then triage failures into annotations.
+          script: |-
+            code=0
+            bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log' || code=$?
+            if [ "$code" -ne 0 ]; then
+              python3 .github/workflows/report_failure.py connected.log "Smoke(API ${{ matrix.api-level }})"
+            fi
+            exit $code

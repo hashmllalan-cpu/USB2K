@@ -48,9 +48,7 @@ class CrashReportActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val trace = intent.getStringExtra(EXTRA_TRACE)?.takeIf { it.isNotBlank() }
-            ?: runCatching { File(filesDir, REPORT_FILE).readText() }.getOrDefault("")
-            .ifBlank { "(no crash report was written)" }
+        val trace = loadTrace()
         setContent {
             UsbMediaExplorerTheme {
                 CrashReportScreen(
@@ -72,6 +70,19 @@ class CrashReportActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /**
+     * Intent extra first, then the filesDir copy the crash handler always writes, then a
+     * placeholder. Written as plain early-returns on purpose: the previous takeIf/elvis/
+     * runCatching chain crashed the Kotlin 2.0.21 (K2) compiler during FIR analysis.
+     */
+    private fun loadTrace(): String {
+        val fromIntent = intent.getStringExtra(EXTRA_TRACE)
+        if (!fromIntent.isNullOrBlank()) return fromIntent
+        val fromFile = runCatching { File(filesDir, REPORT_FILE).readText() }.getOrNull()
+        if (!fromFile.isNullOrBlank()) return fromFile
+        return "(no crash report was written)"
     }
 
     companion object {

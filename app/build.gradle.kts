@@ -101,9 +101,22 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+    // Keep CI failure logs readable: only failed/skipped tests print, with short stack traces.
+    tasks.withType<Test>().configureEach {
+        testLogging {
+            events("failed", "skipped")
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.SHORT
+        }
+    }
+
     lint {
         abortOnError = false
         warningsAsErrors = false
+        // Plain-text report: mined by the CI failure-triage step on lint crashes.
+        textReport = true
     }
 }
 
@@ -142,7 +155,11 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Real org.json (android.jar stubs return null) + Mockito for android.net.Uri fakes.
+    testImplementation(libs.org.json)
+    testImplementation(libs.mockito.core)
     androidTestImplementation(libs.androidx.test.junit)
+    androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation(platform(libs.androidx.compose.bom))

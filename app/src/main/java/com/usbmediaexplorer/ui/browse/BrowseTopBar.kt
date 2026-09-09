@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Sort
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.DropdownMenu
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.usbmediaexplorer.R
 import com.usbmediaexplorer.ui.common.bidiName
+import com.usbmediaexplorer.util.Formatters
 
 @Composable
 fun BrowseTopBar(
@@ -163,6 +165,56 @@ fun BrowseTopBar(
                         onClick = { onDismissOverflow(); reducer.settings() },
                     )
                 }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.background,
+            scrolledContainerColor = MaterialTheme.colorScheme.background,
+        ),
+    )
+}
+
+/**
+ * Selection-mode replacement for [BrowseTopBar]: selected count + total size with
+ * close / select-all / invert actions. (Was referenced but never defined — added to
+ * fix the `Unresolved reference 'SelectionTopBar'` compilation error.)
+ */
+@Composable
+fun SelectionTopBar(
+    count: Int,
+    sizeBytes: Long,
+    onClose: () -> Unit,
+    onSelectAll: () -> Unit,
+    onInvert: () -> Unit,
+) {
+    TopAppBar(
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(Icons.Outlined.Close, stringResource(R.string.action_close))
+            }
+        },
+        title = {
+            Column {
+                Text(
+                    text = stringResource(R.string.selection_count, count),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = Formatters.size(sizeBytes),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onSelectAll) {
+                Icon(Icons.Outlined.SelectAll, stringResource(R.string.action_select_all))
+            }
+            IconButton(onClick = onInvert) {
+                Icon(Icons.Outlined.SwapVert, stringResource(R.string.action_invert_selection))
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

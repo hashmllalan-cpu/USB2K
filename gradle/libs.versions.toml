@@ -1,11 +1,19 @@
 [versions]
 agp = "8.7.3"
-kotlin = "2.0.21"
+# 2.1.x is the newest KGP line AGP 8.7.3 accepts; 2.1.20 also carries the K2
+# stabilization fixes (2.0.21 crashed in FIR checkers on CrashReportActivity).
+kotlin = "2.1.20"
 coreKtx = "1.15.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2026.08.00"
-navigation = "2.10.0"
+# CEILING (2026-09-09): Compose 1.11 (BOM 2026.04.01) could not be used either — its
+# custom lint checks crash lint 8.7.3 in initializeExtraRegistries, and only an
+# AGP 9 upgrade brings a compatible lint. Stay on the Dec-2024 coherent set
+# (written-for versions) until that upgrade. See AUDIT_REPORT §12.
+composeBom = "2024.12.01"
+# CEILING: navigation 2.9.x pulls Compose 1.9+ (breaking the coherent set above)
+# and needs the same AGP 9 upgrade. Revisit together with the BOM.
+navigation = "2.8.5"
 documentfile = "1.1.0"
 media3 = "1.11.0"
 coil = "2.7.0"
@@ -13,7 +21,11 @@ datastore = "1.1.1"
 coroutines = "1.11.0"
 junit = "4.13.2"
 androidxTestJunit = "1.2.1"
+androidxTestCore = "1.6.1"
 espresso = "3.6.1"
+# Pure-JVM test doubles: android.jar stubs return null under isReturnDefaultValues.
+json = "20240303"
+mockitoCore = "5.14.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -52,7 +64,10 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestJunit" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+org-json = { group = "org.json", name = "json", version.ref = "json" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

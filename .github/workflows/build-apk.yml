@@ -55,8 +55,9 @@ jobs:
 
       # إن وُجد السر USBMEDIA_KEYSTORE_B64 يُكتب المفتاح الحقيقي (المُداوَر) إلى
       # keystore/ci.p12 — وهو ملف متجاهَل في .gitignore ولا يعود أبدًا إلى المستودع.
-      # غياب السر يفشل المهمة؛ لا يوجد مفتاح احتياطي داخل المستودع.
+      # غياب السر يتجاوز بناء release فقط؛ نسخة debug تُبنى دائمًا (REL-01).
       - name: Materialize signing keystore from secrets
+        id: signing
         env:
           KEYSTORE_B64: ${{ secrets.USBMEDIA_KEYSTORE_B64 }}
         run: |
@@ -65,10 +66,11 @@ jobs:
             printf "%s" "$KEYSTORE_B64" | base64 -d > keystore/ci.p12
             echo "USBMEDIA_KEYSTORE_PATH=$GITHUB_WORKSPACE/keystore/ci.p12" >> "$GITHUB_ENV"
             echo "SIGNING_SOURCE=github-secret" >> "$GITHUB_ENV"
+            echo "has_signing=true" >> "$GITHUB_OUTPUT"
             echo "Signing with the rotated key from repository secrets."
           else
-            echo "::error::USBMEDIA_KEYSTORE_B64 is required for release builds."
-            exit 1
+            echo "has_signing=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::USBMEDIA_KEYSTORE_B64 is not configured - release build will be skipped, debug APK will still be produced."
           fi
 
       - name: Build debug APK
@@ -152,7 +154,7 @@ jobs:
       # التشغيل وينشر الأخطاء في المستودع مثل نسخة debug تمامًا.
       - name: Build release APK (signed, R8)
         id: release_build
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && steps.signing.outputs.has_signing == 'true'
         continue-on-error: true
         env:
           USBMEDIA_STORE_PASSWORD: ${{ secrets.USBMEDIA_STORE_PASSWORD }}

@@ -25,7 +25,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Verify wrapper
         run: ./gradlew --version
       - name: Unit tests
@@ -72,11 +72,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      # Same pin as build-apk.yml (VRF-02): one SHA per action across the repo, and the
+      # comment must name the release that SHA actually is. Proven green on the `verify`
+      # job by run 34373598827 (dependabot PR #15).
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Run instrumented tests on emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        # Pinned to the commit behind the `v2` tag (= release v2.38.0) instead of the
+        # floating tag, matching the SHA-pinning policy of every other action (VRF-01).
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2 (release v2.38.0)
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
@@ -84,11 +89,31 @@ jobs:
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           # bash wrapper: the script shell is sh (no pipefail) with errexit, so run
           # Gradle under bash for a truthful exit code, capture it via || (which
-          # is exempt from errexit), then triage failures into annotations.
+          # is exempt from errexit), then triage the failure. The evidence script dumps
+          # the device state (logcat, install/instrumentation state) and annotates the
+          # run — while the emulator is still alive, which is the only moment that data
+          # exists. It must never change the exit code, so `|| true`.
           script: |-
             code=0
             bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log' || code=$?
             if [ "$code" -ne 0 ]; then
-              python3 .github/workflows/report_failure.py connected.log "Smoke(API ${{ matrix.api-level }})"
+              sh .github/workflows/smoke_evidence.sh smoke-evidence "Smoke(API ${{ matrix.api-level }})" connected.log || true
             fi
             exit $code
+
+      # The raw job log sits on a host a sandboxed reviewer cannot reach, and the Gradle
+      # error only says "There were failing tests". This artifact is what makes an
+      # emulator failure diagnosable afterwards: device logcat + crash buffer + install
+      # and instrumentation state + the connected-test reports.
+      - name: Upload smoke failure evidence
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0
+        with:
+          name: smoke-api-${{ matrix.api-level }}-evidence
+          path: |
+            connected.log
+            smoke-evidence/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: warn
+          retention-days: 14

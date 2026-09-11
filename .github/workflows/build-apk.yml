@@ -41,8 +41,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # Same pin as verify.yml (VRF-02). The SHA is release v6.3.0 — the old
+      # `# v4.4.0` comment was wrong and hid that the two workflows had drifted.
       - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v4.4.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           gradle-version: '8.9'
 

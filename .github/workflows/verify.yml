@@ -68,7 +68,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [29, 35]
+        # API 29 keeps google_apis — proven green (run 34653605619, `SMOKE gradle_exit=0`).
+        # API 35 moves to the AOSP image with more cores/RAM: on google_apis its
+        # system_server died under software emulation — the triage of that same run shows
+        # `DeadSystemException: The system died` in com.google.android.apps.nexuslauncher,
+        # com.android.phone, com.android.bluetooth and permissioncontroller, with no crash
+        # from our own package at all. The smoke test needs no Google APIs, so the lighter
+        # image removes exactly the processes that were starving the system.
+        include:
+          - api-level: 29
+            target: google_apis
+            cores: 2
+            ram-size: 2048M
+          - api-level: 35
+            target: default
+            cores: 4
+            ram-size: 4096M
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
@@ -90,7 +105,9 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
-          target: google_apis
+          target: ${{ matrix.target }}
+          cores: ${{ matrix.cores }}
+          ram-size: ${{ matrix.ram-size }}
           # Default is 600 s, which API 35 exceeds without KVM. Raise it instead of
           # silently dropping the newer API from the matrix.
           emulator-boot-timeout: 1800

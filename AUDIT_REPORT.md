@@ -82,7 +82,7 @@ git fetch origin main && git diff --stat HEAD origin/main  # empty: branch == ma
 | JUnit4 / Espresso / UIAutomator-test | 4.13.2 / 3.6.1 / — | Test-only |
 | DI framework | **None (hand-rolled `AppContainer`)** | Deliberate, justified, appropriate at this scale |
 
-Dependency cám ơn: no Hilt/KSP, no Room, no Retrofit/OkHttp direct use, no Firebase — the graph is small and fully offline.
+Dependency graph: no Hilt/KSP, no Room, no Retrofit/OkHttp direct use, no Firebase — the graph is small and fully offline.
 
 ### 2.3 Runtimes & package management
 
@@ -364,7 +364,7 @@ Facade (`DocRepository`), Strategy (`FrameStrategy`, providers), Repository + `S
 
 ## 10. Licenses & third-party services
 
-- **LIC-01 (P0): no `LICENSE` file.** An unlicensed public repo is "all rights reserved" by default — this blocks lawful redistribution, F-Droid/Play第三方 packaging, and contributor confidence. Decide: Apache-2.0 (recommended — matches the entire dependency tree) or explicit proprietary notice. (XS + a maintainer decision)
+- **LIC-01 (P0): no `LICENSE` file.** An unlicensed public repo is "all rights reserved" by default — this blocks lawful redistribution, F-Droid/Play third-party packaging, and contributor confidence. Decide: Apache-2.0 (recommended — matches the entire dependency tree) or explicit proprietary notice. (XS + a maintainer decision)
 - **Dependency licenses (all permissive, no GPL):** AndroidX/Media3/Coil/Okio/ExifInterface/Kotlin/Coroutines/DataStore/DocumentFile/Activity/AppCompat/Lifecycle/Espresso → **Apache-2.0**; JUnit4 (test-only) → EPL-1.0 (fine, not shipped); Gradle wrapper → Apache-2.0. No license conflicts for an Apache-2.0 or proprietary app.
 - **LIC-02 (P2):** no OSS-notices screen/asset. Add generated notices (e.g., AboutLibraries) — Play reviewers and enterprise users expect it. (S)
 - **Privacy (P0 for any store release):** no privacy-policy file/URL. Draft one (offline app: "no data leaves the device; history excluded from backup; crash reports shared only by you"). Required by Play even for no-data apps. (S)
@@ -427,6 +427,18 @@ Facade (`DocRepository`), Strategy (`FrameStrategy`, providers), Repository + `S
 > the emulator `script:` block passes `sh -n` and `bash -n`; `smoke_evidence.sh` was executed end-to-end against a stub `adb` (10 evidence files written, annotation
 > emitted, exit 0) and again with `adb` absent from `PATH` (writes `adb-missing.txt`, exit 0); `report_failure.py` was run against a synthetic `connected.log` + logcat +
 > two connected-test XMLs and emitted the `DEVICE CRASH` plus both `FAILING TEST` lines. The 2-argument invocation used by the `verify` job is unchanged and still works.
+>
+> **Root cause of the emulator-smoke failure (found 2026-09-11, run `34649210471`):** it was never a test problem first — it was the harness.
+> Read from the pinned action's own source at `a421e438` (`src/main.ts` → `parseScript(scriptInput)`, `src/script-parser.ts` →
+> `.split(/\r\n|\n|\r/)` then `exec.exec('sh', ['-c', script])` per element): `reactivecircus/android-emulator-runner` splits the `script`
+> input on **every newline** and runs each line as a **separate `sh -c` process**. So `code=0` on line 1 never reached line 3, and
+> `if [ "$code" -ne 0 ]; then` executed alone is a shell syntax error → the job died with **exit code 2** before Gradle's real status or any
+> triage could run. That is exactly why main's runs `34373434549` reported `exit code 2` with no annotation while PR #17's single-line
+> rewrite reported `exit code 1` *with* the Gradle annotation — the same underlying failure, two different harness bugs.
+> Fixed by folding the whole flow into ONE `sh -c` (YAML `>-`) that `cd`s to `$GITHUB_WORKSPACE` (the action only `chdir()`s when
+> `working-directory` is set), captures `${PIPESTATUS[0]}`, and runs the evidence dump on failure. Verified by re-implementing `parseScript`
+> over the parsed YAML value (1 element, 0 newlines) and executing the payload against a stub `gradlew`: failure path emits
+> `SMOKE gradle_exit=1` + the `::error::` triage and exits 1; success path exits 0 and collects nothing.
 
 **Effort scale:** XS <1 h · S 1–4 h · M 1–3 d · L 1–2 w. All phases assume one Android engineer with a JDK 17 + SDK 36 workstation (or CI access).
 

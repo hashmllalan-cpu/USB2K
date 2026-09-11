@@ -90,19 +90,25 @@ jobs:
           arch: x86_64
           target: google_apis
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
-          # bash wrapper: the script shell is sh (no pipefail) with errexit, so run
-          # Gradle under bash for a truthful exit code, capture it via || (which
-          # is exempt from errexit), then triage the failure. The evidence script dumps
-          # the device state (logcat, install/instrumentation state) and annotates the
-          # run — while the emulator is still alive, which is the only moment that data
-          # exists. It must never change the exit code, so `|| true`.
-          script: |-
-            code=0
-            bash -o pipefail -c './gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log' || code=$?
+          # ROOT CAUSE of the long-standing smoke failure (read from the pinned action's
+          # src/main.ts + src/script-parser.ts): the action splits `script` on EVERY newline
+          # and runs each line as its own `sh -c`, so variables never survive to the next
+          # line and a multi-line `if … then … fi` block dies as a syntax error — the job
+          # reported "exit code 2" without Gradle's real status or any triage ever running.
+          # Therefore the whole flow must be ONE line: the YAML folded scalar (`>-`) joins
+          # these physical lines with spaces into a single value, which the action then runs
+          # as one `sh -c` that hands a self-contained program to bash. `cd` first because
+          # the action only chdir()s when `working-directory` is set.
+          script: >-
+            bash -c 'cd "${GITHUB_WORKSPACE}" || exit 9;
+            echo "::notice::SMOKE start $(pwd) API ${{ matrix.api-level }}";
+            ./gradlew :app:connectedDebugAndroidTest --no-daemon --console=plain --stacktrace 2>&1 | tee connected.log;
+            code=${PIPESTATUS[0]};
+            echo "::notice::SMOKE gradle_exit=$code";
             if [ "$code" -ne 0 ]; then
-              sh .github/workflows/smoke_evidence.sh smoke-evidence "Smoke(API ${{ matrix.api-level }})" connected.log || true
-            fi
-            exit $code
+            sh .github/workflows/smoke_evidence.sh smoke-evidence "Smoke(API ${{ matrix.api-level }})" connected.log || true;
+            fi;
+            exit $code'
 
       # The raw job log sits on a host a sandboxed reviewer cannot reach, and the Gradle
       # error only says "There were failing tests". This artifact is what makes an

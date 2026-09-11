@@ -9,6 +9,9 @@
    الدفع العادي إلى الفروع لا يبني APK.
 2. بعد ~5–10 دقائق تحصل على الملف من أحد مكانين:
    - **Releases** → [`apk-latest`](https://github.com/hashmllalan-cpu/USB2K/releases/tag/apk-latest)
+     ⚠️ **هذا الرابط لا يعمل بعد**: لم يُنشأ أي Release في المستودع حتى الآن، لأنه يتطلب
+     أسرار التوقيع `USBMEDIA_*` أولًا (راجع `README.md` §6). قبل ذلك يبقى مسار الـArtifacts
+     أدناه هو المصدر الوحيد لملف APK (نسخة debug).
      → نزّل `app-release.apk` — **النسخة الموصى بها والوحيدة المنشورة**:
      موقّعة ومصغّرة بـ R8 (رابط ثابت يتحدث مع كل بناء ناجح)، أو
    - تشغيل السير نفسه → قسم **Artifacts** → `USB-Media-Explorer-debug-apk`

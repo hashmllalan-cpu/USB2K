@@ -62,7 +62,9 @@ jobs:
   instrumented-smoke:
     name: Instrumented smoke (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 60, not 45: a software-emulated API 35 boot alone can eat 20+ minutes on a runner
+    # without /dev/kvm (run 34651240282: "Timeout waiting for emulator to boot" at 600 s).
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -89,6 +91,12 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
+          # Default is 600 s, which API 35 exceeds without KVM. Raise it instead of
+          # silently dropping the newer API from the matrix.
+          emulator-boot-timeout: 1800
+          # Makes the action chdir() itself, so relative paths in the script hold even
+          # though the script also cds defensively.
+          working-directory: ${{ github.workspace }}
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
           # ROOT CAUSE of the long-standing smoke failure (read from the pinned action's
           # src/main.ts + src/script-parser.ts): the action splits `script` on EVERY newline

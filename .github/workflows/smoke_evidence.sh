@@ -52,16 +52,30 @@ if command -v adb >/dev/null 2>&1; then
     probe crash-buffer.txt adb logcat -d -b crash -v threadtime
     probe logcat.txt adb logcat -d -v threadtime
     probe crash-dirs.txt adb shell ls -la /data/anr /data/tombstones
+    # Did the app under test even get installed / is it still alive? "There were failing
+    # tests" with no failing <testcase> usually means the instrumentation process died.
+    probe app-processes.txt adb shell ps -A
     # Drop the huge buffers: the artifact is for triage, not for archival.
     probe meminfo.txt adb shell dumpsys meminfo "$PKG"
 else
     echo "adb not on PATH - no device evidence collected" > "$OUT/adb-missing.txt"
 fi
 
-# Surface the cause as a check annotation (the log host may be unreachable). The
-# triage script mines the Gradle log and, when present, the device logcat.
+# Where did AGP put the connected-test results? Run 34651240282 triaged a real failure
+# yet found no failing <testcase>, so the next run must show what result files exist at
+# all - the annotation is the only channel readable without the raw job log.
+{
+    echo "\$ find app/build/outputs/androidTest-results app/build/reports/androidTests -type f"
+    find app/build/outputs/androidTest-results app/build/reports/androidTests -type f 2>&1 | head -60
+    echo "exit=$?"
+} > "$OUT/test-results-tree.txt"
+
+# Surface the cause as a check annotation (the log host may be unreachable). The triage
+# script mines the Gradle log and then the device traces: the dedicated crash buffer
+# first (highest signal), then the full logcat.
 if command -v python3 >/dev/null 2>&1; then
-    python3 "$HERE/report_failure.py" "$GRADLE_LOG" "$LABEL" "$OUT/logcat.txt" || true
+    python3 "$HERE/report_failure.py" "$GRADLE_LOG" "$LABEL" \
+        "$OUT/crash-buffer.txt" "$OUT/logcat.txt" || true
 fi
 
 exit 0

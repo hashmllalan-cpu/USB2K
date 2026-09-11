@@ -8,6 +8,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import com.usbmediaexplorer.util.CoverNames
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 import java.io.OutputStream
@@ -157,9 +158,11 @@ class SafDocProvider(
         var total = 0L
         val stack = ArrayDeque<DocNode>()
         stack.addLast(node)
-        // Hard stop so a pathological tree can never hang the UI.
+        // Hard stop so a pathological tree can never hang the UI, and a cancellation check
+        // per entry so leaving the screen (or unplugging the drive) stops the walk at once.
         var visited = 0
         while (stack.isNotEmpty() && visited < 20_000) {
+            ensureActive()
             val current = stack.removeLast()
             visited++
             val kids = runCatching { children(current) }.getOrDefault(emptyList())

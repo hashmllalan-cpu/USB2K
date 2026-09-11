@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor
 import android.os.StatFs
 import com.usbmediaexplorer.util.CoverNames
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -125,8 +126,14 @@ class FileDocProvider(
         var total = 0L
         val stack = ArrayDeque<File>()
         node.uri.path?.let { stack.addLast(File(it)) }
-        while (stack.isNotEmpty()) {
+        // PERF-01: a folder on a USB drive can hold hundreds of thousands of entries, and a
+        // symlink loop would never terminate. Bound the walk and check cancellation every
+        // entry so closing the details sheet (or unplugging the drive) stops it immediately.
+        var visited = 0
+        while (stack.isNotEmpty() && visited < MAX_VISITED_ENTRIES) {
+            ensureActive()
             val current = stack.removeLast()
+            visited++
             if (current.isDirectory) {
                 current.listFiles()?.forEach { stack.addLast(it) }
             } else {
@@ -240,6 +247,11 @@ class FileDocProvider(
         val ext = name.substringAfterLast('.', "").lowercase(Locale.US)
         if (ext.isEmpty() || ext == name.lowercase(Locale.US)) return null
         return MediaKind.mimeTypeFor(ext)
+    }
+
+    private companion object {
+        /** Upper bound for one `directorySize` walk — same limit the SAF backend uses. */
+        const val MAX_VISITED_ENTRIES = 20_000
     }
 }
 

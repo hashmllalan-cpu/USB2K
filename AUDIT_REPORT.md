@@ -82,7 +82,7 @@ git fetch origin main && git diff --stat HEAD origin/main  # empty: branch == ma
 | JUnit4 / Espresso / UIAutomator-test | 4.13.2 / 3.6.1 / — | Test-only |
 | DI framework | **None (hand-rolled `AppContainer`)** | Deliberate, justified, appropriate at this scale |
 
-Dependency cám ơn: no Hilt/KSP, no Room, no Retrofit/OkHttp direct use, no Firebase — the graph is small and fully offline.
+Dependency graph: no Hilt/KSP, no Room, no Retrofit/OkHttp direct use, no Firebase — the graph is small and fully offline.
 
 ### 2.3 Runtimes & package management
 
@@ -273,8 +273,8 @@ Process facts established: **no green `Verify` in the observable window; 5 depen
 
 Good bones: `contents: read`, SHA-pinned `checkout`/`setup-java`/`setup-gradle` ✅, 30-min timeout, unit→lint→build order, API 29+35 emulator matrix with `fail-fast: false`. Issues:
 
-- **VRF-01 (P1):** `reactivecircus/android-emulator-runner@v2` is a **floating tag**, breaking the otherwise strict SHA-pinning policy. Pin it.
-- **VRF-02 (P1):** `setup-gradle` SHA **differs between workflows** (`ed408507…` here vs `9c971963…` in build-apk) while both are labeled `# v4.4.0`. Re-pin both to one current SHA.
+- **VRF-01 (P1) — ✅ fixed 2026-09-11:** `reactivecircus/android-emulator-runner@v2` was a **floating tag**, breaking the otherwise strict SHA-pinning policy. Now pinned to `a421e438…`, the commit the `v2` tag resolves to (= release v2.38.0, verified through the tags API).
+- **VRF-02 (P1) — ✅ fixed 2026-09-11:** `setup-gradle` SHA **differed between workflows** (`ed408507…`, a Sept-2025 commit, in verify.yml vs `9c971963…` in build-apk) while both carried a wrong `# v4.4.0` label. Both workflows now use one SHA — `9c971963…`, which the tags API resolves to **v6.3.0** — with corrected labels; dependabot PR #15 already proved that SHA green on the `verify` job (run `34373598827`).
 - **VRF-03 (P2):** full 2-API emulator matrix on *every PR* is slow/expensive (~2×45 min). Gate smokes to `main` pushes + labeled PRs, or keep one API on PRs.
 - **VRF-04 (P1):** checks are evidently **not required** (red PRs merged). Enable branch protection on `main`: require `verify` + smoke, 1 review, no force-push; protect `v*`/`apk-latest` tags. (Setting unverifiable from here — API 403 — so this is behavioral evidence + recommendation.)
 
@@ -364,7 +364,7 @@ Facade (`DocRepository`), Strategy (`FrameStrategy`, providers), Repository + `S
 
 ## 10. Licenses & third-party services
 
-- **LIC-01 (P0): no `LICENSE` file.** An unlicensed public repo is "all rights reserved" by default — this blocks lawful redistribution, F-Droid/Play第三方 packaging, and contributor confidence. Decide: Apache-2.0 (recommended — matches the entire dependency tree) or explicit proprietary notice. (XS + a maintainer decision)
+- **LIC-01 (P0): no `LICENSE` file.** An unlicensed public repo is "all rights reserved" by default — this blocks lawful redistribution, F-Droid/Play third-party packaging, and contributor confidence. Decide: Apache-2.0 (recommended — matches the entire dependency tree) or explicit proprietary notice. (XS + a maintainer decision)
 - **Dependency licenses (all permissive, no GPL):** AndroidX/Media3/Coil/Okio/ExifInterface/Kotlin/Coroutines/DataStore/DocumentFile/Activity/AppCompat/Lifecycle/Espresso → **Apache-2.0**; JUnit4 (test-only) → EPL-1.0 (fine, not shipped); Gradle wrapper → Apache-2.0. No license conflicts for an Apache-2.0 or proprietary app.
 - **LIC-02 (P2):** no OSS-notices screen/asset. Add generated notices (e.g., AboutLibraries) — Play reviewers and enterprise users expect it. (S)
 - **Privacy (P0 for any store release):** no privacy-policy file/URL. Draft one (offline app: "no data leaves the device; history excluded from backup; crash reports shared only by you"). Required by Play even for no-data apps. (S)
@@ -400,6 +400,45 @@ Facade (`DocRepository`), Strategy (`FrameStrategy`, providers), Repository + `S
 > **Remediation log, continued — compiler + lint (same branch):** peeling the AAR layers revealed two more stacked failures. (a) KGP `2.0.21` crashed deterministically in FIR checkers (`FileAnalysisException …CrashReportActivity.kt:49:5: source must not be null`, `fir.pipeline.AnalyseKt.runCheckers`) on every branch; simplifying the file did not help → bumped Kotlin `2.0.21 → 2.1.20` (newest line AGP 8.7.3 accepts), crash gone. That exposed a real code bug: `SelectionTopBar` referenced but never defined → implemented it (count + size + close/select-all/invert). (b) `lintAnalyzeDebug` then crashed in `LintDriver.initializeExtraRegistries` — the Compose 1.11 (BOM `2026.04.01`) custom lint checks are binary-incompatible with lint 8.7.3; only an AGP 9 upgrade brings a compatible lint. Reverted to the coherent written-for set BOM `2024.12.01` (Compose 1.7) + Navigation `2.8.5` and widened the dependabot ceilings (`> 2024.12.01`, `>= 2.9`) until the AGP 9 upgrade. Triage script extracted to `.github/workflows/report_failure.py` and wired for unit-tests/lint/build steps.
 >
 > **Milestone (same branch, run `34366429897`): `verify` job GREEN for the first time in repo history** — Unit tests + Lint + Debug build all pass. Remaining: instrumented-smoke jobs (API 29 failed inside the emulator script after ~8 min; triage wiring added for the nested Gradle output, connected-test XMLs included).
+>
+> **Remediation log (2026-09-11, branch `arena/01a0921e-usb2k` — the smoke gate is the only red check left):**
+> `main` is at `2989f93` and its `verify` job is **green** (run `34373434549`: unit tests + lint + `assembleDebug` all pass in 5m50s). The two
+> `instrumented-smoke` jobs (API 29 + 35) fail on **every** run — the `main` push `34373434549`, the draft-PR run `34378498906`, and all six open
+> dependabot PRs (`34373517051`, `34373527355`, `34373567004`, `34373587630`, `34373598827`, `34373636256`), whose `verify` jobs are all green. The
+> dependency bumps are therefore not the cause and the app still builds; the failure is inside the emulator run.
+>
+> What the evidence does **not** yet say: the only Gradle-level cause is `There were failing tests. See the report at: …/reports/androidTests/connected/debug/index.html`,
+> and the triage annotation of run `34378498906` carried **no** `FAILING TEST:` entry — i.e. no failing `<testcase>` was found under `app/build/outputs/androidTest-results/`.
+> The raw step log is unreadable from a sandbox (the log host `results-receiver.actions.githubusercontent.com` returns `EOF` on every attempt; only `api.github.com`
+> is reachable), so the **root cause is still unknown**. Ranked hypotheses: (1) the app crashes while launching on the emulator; (2) the instrumentation never
+> starts or the install fails (`installPackages` frames appear in the annotation); (3) a genuine assertion failure in `ApplicationSmokeTest`.
+>
+> Shipped in this branch — make the next run self-diagnosing instead of guessing:
+> 1. **`.github/workflows/smoke_evidence.sh` (new):** while the emulator is still alive it dumps `adb devices` / `getprop` / `pm list packages` / `pm list instrumentation` /
+>    `dumpsys package` / `dumpsys meminfo`, the **crash buffer**, the full **logcat** and the ANR/tombstone listings into `smoke-evidence/`. Best-effort by design
+>    (every probe guarded, always exits 0) so diagnostics can never mask the real Gradle exit code.
+> 2. **`report_failure.py`:** now accepts device logcat paths and mines them for `FATAL EXCEPTION` / `INSTRUMENTATION_FAILED` / `INSTALL_FAILED` / `am_crash` / `ANR in`
+>    (emitted as `DEVICE CRASH:` entries, ordered before the Gradle frames); the androidTest XML globs widened to `androidTest-results/**` and `reports/androidTests/**`;
+>    a `<failure>` with an empty `message` attribute falls back to its text; the annotation slice grew from 16 to 24 entries so device evidence is no longer truncated away.
+> 3. **`verify.yml`:** a failed smoke run now uploads a `smoke-api-<N>-evidence` artifact (`connected.log` + the evidence dir + both report trees, 14-day retention),
+>    and the VRF-01 / VRF-02 pin gaps above are closed.
+>
+> Verified locally in this sandbox (no JDK/Android SDK, and Gradle/Maven/Google hosts answer `000`, so Gradle itself cannot run here): both workflows parse as YAML;
+> the emulator `script:` block passes `sh -n` and `bash -n`; `smoke_evidence.sh` was executed end-to-end against a stub `adb` (10 evidence files written, annotation
+> emitted, exit 0) and again with `adb` absent from `PATH` (writes `adb-missing.txt`, exit 0); `report_failure.py` was run against a synthetic `connected.log` + logcat +
+> two connected-test XMLs and emitted the `DEVICE CRASH` plus both `FAILING TEST` lines. The 2-argument invocation used by the `verify` job is unchanged and still works.
+>
+> **Root cause of the emulator-smoke failure (found 2026-09-11, run `34649210471`):** it was never a test problem first — it was the harness.
+> Read from the pinned action's own source at `a421e438` (`src/main.ts` → `parseScript(scriptInput)`, `src/script-parser.ts` →
+> `.split(/\r\n|\n|\r/)` then `exec.exec('sh', ['-c', script])` per element): `reactivecircus/android-emulator-runner` splits the `script`
+> input on **every newline** and runs each line as a **separate `sh -c` process**. So `code=0` on line 1 never reached line 3, and
+> `if [ "$code" -ne 0 ]; then` executed alone is a shell syntax error → the job died with **exit code 2** before Gradle's real status or any
+> triage could run. That is exactly why main's runs `34373434549` reported `exit code 2` with no annotation while PR #17's single-line
+> rewrite reported `exit code 1` *with* the Gradle annotation — the same underlying failure, two different harness bugs.
+> Fixed by folding the whole flow into ONE `sh -c` (YAML `>-`) that `cd`s to `$GITHUB_WORKSPACE` (the action only `chdir()`s when
+> `working-directory` is set), captures `${PIPESTATUS[0]}`, and runs the evidence dump on failure. Verified by re-implementing `parseScript`
+> over the parsed YAML value (1 element, 0 newlines) and executing the payload against a stub `gradlew`: failure path emits
+> `SMOKE gradle_exit=1` + the `::error::` triage and exits 1; success path exits 0 and collects nothing.
 
 **Effort scale:** XS <1 h · S 1–4 h · M 1–3 d · L 1–2 w. All phases assume one Android engineer with a JDK 17 + SDK 36 workstation (or CI access).
 
@@ -498,8 +537,8 @@ Read order: `README.md` → `docs/ARCHITECTURE.md` → `di/AppContainer.kt` → 
 | Backup tarball (README ref) | `ls *.tar.gz` | **Missing** (DOC-03) |
 | `compileSdk` docs vs build | grep | Docs 35 vs build 36 (DOC-01) |
 | Debug APK in `apk-latest` (docs claim) | workflow read | Release-only now (DOC-04) |
-| `setup-gradle` pin consistency | grep both workflows | **Different SHAs, same label** (VRF-02) |
-| Emulator runner pin | grep | Floating `@v2` (VRF-01) |
+| `setup-gradle` pin consistency | grep both workflows | ~~Different SHAs, same label~~ → **one SHA (`9c971963…` = v6.3.0) in both** (VRF-02 ✅) |
+| Emulator runner pin | grep | ~~Floating `@v2`~~ → **`a421e438…` (= v2.38.0)** (VRF-01 ✅) |
 | Branch protection | `gh api …/protection` | 403 (unverifiable); red merges prove non-enforcement |
 | Secrets configured | build-apk run `34349094953` | **Proven missing** (fails at materialize step) |
 | Any release published | `gh release list` | **Empty** |

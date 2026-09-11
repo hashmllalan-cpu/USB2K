@@ -3,7 +3,10 @@ name: Verify
 on:
   pull_request:
   push:
-    branches: [ main ]
+    # main: the merge gate. arena/**: the working branches this repo is developed on.
+    # Without the arena/** trigger a pushed branch runs *no* CI at all, so a red
+    # instrumented-smoke job could only ever be diagnosed by opening a PR first.
+    branches: [ main, "arena/**" ]
 
 permissions:
   contents: read

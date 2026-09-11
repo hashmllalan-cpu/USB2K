@@ -124,7 +124,9 @@ class PlayerViewModel(
                     persistPosition()
                     _state.value = _state.value.copy(
                         error = null,
-                        failure = PlaybackFailure.from(error.errorCodeName, error.message),
+                        // Classify by the Media3 error code first; the text is only the
+                        // fallback (BUG-01 — text-only matching misread decoder/network codes).
+                        failure = PlaybackFailure.from(error),
                         loading = false,
                         isPlaying = false,
                     )

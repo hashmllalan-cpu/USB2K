@@ -42,10 +42,19 @@
     <string name="action_resume">Resume</string>
     <string name="action_start_over">Start over</string>
     <string name="action_select_destination">Select destination</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_recent">Recent</string>
+    <string name="nav_transfers">Operations</string>
+    <string name="nav_settings">Settings</string>
 
     <!-- Home / volumes -->
     <string name="home_title">Storage</string>
     <string name="home_subtitle">Pick a drive to browse</string>
+    <string name="home_overview_title">Your storage, in one place</string>
+    <string name="home_overview_body">Browse files and media with a clear view of every connected drive.</string>
+    <string name="home_overview_connected">%1$d connected</string>
+    <string name="home_overview_free">%1$s available</string>
     <string name="section_volumes">Volumes</string>
     <string name="section_quick_access">Quick access</string>
     <string name="section_favorites">Favorites</string>

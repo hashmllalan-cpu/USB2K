@@ -124,7 +124,7 @@ class SettingsRepository(private val context: Context) {
             .coerceIn(32L * 1024 * 1024, 8L * 1024 * 1024 * 1024),
         cacheEnabled = this[Keys.CACHE_ENABLED] ?: true,
         themeMode = enumOrDefault(this[Keys.THEME], ThemeMode.SYSTEM),
-        dynamicColor = this[Keys.DYNAMIC_COLOR] ?: true,
+        dynamicColor = this[Keys.DYNAMIC_COLOR] ?: false,
         languageMode = enumOrDefault(this[Keys.LANGUAGE], LanguageMode.SYSTEM),
         defaultViewMode = enumOrDefault(this[Keys.VIEW_MODE], ViewMode.GRID_SMALL),
         defaultSortMode = enumOrDefault(this[Keys.SORT_MODE], SortMode.NAME_ASC),

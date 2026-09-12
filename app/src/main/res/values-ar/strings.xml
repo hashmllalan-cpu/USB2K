@@ -42,10 +42,19 @@
     <string name="action_resume">استئناف</string>
     <string name="action_start_over">من البداية</string>
     <string name="action_select_destination">اختيار الوجهة</string>
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_favorites">المفضلة</string>
+    <string name="nav_recent">الأخيرة</string>
+    <string name="nav_transfers">العمليات</string>
+    <string name="nav_settings">الإعدادات</string>
 
     <!-- الشاشة الرئيسية / وحدات التخزين -->
     <string name="home_title">وحدات التخزين</string>
     <string name="home_subtitle">اختر وحدة تخزين لتصفحها</string>
+    <string name="home_overview_title">كل مساحتك في مكان واحد</string>
+    <string name="home_overview_body">تصفح ملفاتك ووسائطك بوضوح عبر وحدات التخزين المتصلة.</string>
+    <string name="home_overview_connected">%1$d وحدات متصلة</string>
+    <string name="home_overview_free">متوفر %1$s</string>
     <string name="section_volumes">الوحدات</string>
     <string name="section_quick_access">وصول سريع</string>
     <string name="section_favorites">المفضلة</string>

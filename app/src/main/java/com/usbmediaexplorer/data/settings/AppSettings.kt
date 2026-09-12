@@ -97,7 +97,8 @@ data class AppSettings(
 
     // Appearance
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = true,
+    /** The product palette is the default; users may opt into Material You in settings. */
+    val dynamicColor: Boolean = false,
     val languageMode: LanguageMode = LanguageMode.SYSTEM,
 
     // Browsing

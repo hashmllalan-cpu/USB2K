@@ -46,6 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -323,6 +324,14 @@ fun HomeScreen(snackbarHostState: SnackbarHostState) {
             ),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
+            item(key = "storage-overview") {
+                StorageOverview(
+                    readyCount = readyVolumes.size,
+                    freeBytes = freeTotal,
+                    onAddStorage = { treePicker.launch(null) },
+                )
+            }
+
             if (state.needsMediaPermission) {
                 item(key = "permission-strip") {
                     PermissionStrip(
@@ -514,6 +523,55 @@ fun HomeScreen(snackbarHostState: SnackbarHostState) {
                 syncPermissionState()
             },
         )
+    }
+}
+
+@Composable
+private fun StorageOverview(
+    readyCount: Int,
+    freeBytes: Long,
+    onAddStorage: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(AppRadius.lg),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        tonalElevation = 0.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(AppSpacing.xl)) {
+            Text(
+                text = stringResource(R.string.home_overview_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+            Spacer(Modifier.height(AppSpacing.xs))
+            Text(
+                text = stringResource(R.string.home_overview_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.82f),
+            )
+            Spacer(Modifier.height(AppSpacing.lg))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.home_overview_connected, readyCount),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.home_overview_free,
+                            Formatters.size(freeBytes),
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f),
+                    )
+                }
+                FilledTonalButton(onClick = onAddStorage) {
+                    Text(stringResource(R.string.action_add_folder))
+                }
+            }
+        }
     }
 }
 

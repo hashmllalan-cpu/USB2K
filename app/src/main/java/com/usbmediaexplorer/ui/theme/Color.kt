@@ -6,8 +6,8 @@ import androidx.compose.ui.graphics.Color
  * Brand palette — the single source of colour truth for the app.
  *
  * Design intent (a file manager, not a settings screen):
- *  - **violet stays the identity**, but it is reserved for what matters: the primary action, the
- *    active selection, the brand mark. Everything the user reads is neutral.
+ *  - **deep navy and teal define the identity**, reserved for navigation and primary actions.
+ *    Storage and media content remain the visual focus.
  *  - **surfaces are neutral**, barely tinted, so thumbnails and posters — the real content of this
  *    app — are the most saturated things on screen.
  *  - **meaning gets its own colour**: success, warning and danger are semantic and never borrow the
@@ -19,37 +19,37 @@ import androidx.compose.ui.graphics.Color
 object Palette {
 
     // ---- light -------------------------------------------------------------
-    val PrimaryLight = Color(0xFF5B4BC4)
+    val PrimaryLight = Color(0xFF087F8C)
     val OnPrimaryLight = Color(0xFFFFFFFF)
-    val PrimaryContainerLight = Color(0xFFE5E0FF)
-    val OnPrimaryContainerLight = Color(0xFF150A4E)
+    val PrimaryContainerLight = Color(0xFFC4EEF0)
+    val OnPrimaryContainerLight = Color(0xFF00363A)
 
-    val SecondaryLight = Color(0xFF5D5C72)
+    val SecondaryLight = Color(0xFF48636A)
     val OnSecondaryLight = Color(0xFFFFFFFF)
-    val SecondaryContainerLight = Color(0xFFE2E0F9)
-    val OnSecondaryContainerLight = Color(0xFF1A1A2C)
+    val SecondaryContainerLight = Color(0xFFCCE8EC)
+    val OnSecondaryContainerLight = Color(0xFF061F24)
 
-    val TertiaryLight = Color(0xFF00687A)
+    val TertiaryLight = Color(0xFFA15C00)
     val OnTertiaryLight = Color(0xFFFFFFFF)
-    val TertiaryContainerLight = Color(0xFFAFEDFF)
-    val OnTertiaryContainerLight = Color(0xFF001F26)
+    val TertiaryContainerLight = Color(0xFFFFDDB5)
+    val OnTertiaryContainerLight = Color(0xFF321900)
 
-    val BackgroundLight = Color(0xFFFAF8FD)
-    val OnBackgroundLight = Color(0xFF1A1A20)
-    val SurfaceLight = Color(0xFFFAF8FD)
-    val OnSurfaceLight = Color(0xFF1A1A20)
-    val SurfaceVariantLight = Color(0xFFE4E1EC)
-    val OnSurfaceVariantLight = Color(0xFF47464F)
-    val OutlineLight = Color(0xFF787680)
-    val OutlineVariantLight = Color(0xFFC9C5D0)
+    val BackgroundLight = Color(0xFFF7F9FA)
+    val OnBackgroundLight = Color(0xFF17272B)
+    val SurfaceLight = Color(0xFFF7F9FA)
+    val OnSurfaceLight = Color(0xFF17272B)
+    val SurfaceVariantLight = Color(0xFFDCE5E7)
+    val OnSurfaceVariantLight = Color(0xFF405156)
+    val OutlineLight = Color(0xFF6E7C80)
+    val OutlineVariantLight = Color(0xFFBECBCD)
 
     val SurfaceContainerLowestLight = Color(0xFFFFFFFF)
-    val SurfaceContainerLowLight = Color(0xFFF5F2FA)
-    val SurfaceContainerLight = Color(0xFFEFEDF5)
-    val SurfaceContainerHighLight = Color(0xFFE9E7F0)
-    val SurfaceContainerHighestLight = Color(0xFFE3E1EA)
-    val SurfaceDimLight = Color(0xFFDBD9E1)
-    val SurfaceBrightLight = Color(0xFFFAF8FD)
+    val SurfaceContainerLowLight = Color(0xFFEEF3F4)
+    val SurfaceContainerLight = Color(0xFFE8EFF0)
+    val SurfaceContainerHighLight = Color(0xFFE1E9EA)
+    val SurfaceContainerHighestLight = Color(0xFFD9E2E3)
+    val SurfaceDimLight = Color(0xFFD0DADC)
+    val SurfaceBrightLight = Color(0xFFF7F9FA)
 
     val ErrorLight = Color(0xFFB3261E)
     val OnErrorLight = Color(0xFFFFFFFF)
@@ -57,37 +57,37 @@ object Palette {
     val OnErrorContainerLight = Color(0xFF410E0B)
 
     // ---- dark --------------------------------------------------------------
-    val PrimaryDark = Color(0xFFC6C0FF)
-    val OnPrimaryDark = Color(0xFF2A1E7C)
-    val PrimaryContainerDark = Color(0xFF4237A0)
-    val OnPrimaryContainerDark = Color(0xFFE5E0FF)
+    val PrimaryDark = Color(0xFF62D5D7)
+    val OnPrimaryDark = Color(0xFF00363A)
+    val PrimaryContainerDark = Color(0xFF005F64)
+    val OnPrimaryContainerDark = Color(0xFFC4EEF0)
 
-    val SecondaryDark = Color(0xFFC6C3DD)
-    val OnSecondaryDark = Color(0xFF2F2E42)
-    val SecondaryContainerDark = Color(0xFF454459)
-    val OnSecondaryContainerDark = Color(0xFFE2E0F9)
+    val SecondaryDark = Color(0xFFB0CCD1)
+    val OnSecondaryDark = Color(0xFF1B3439)
+    val SecondaryContainerDark = Color(0xFF334B50)
+    val OnSecondaryContainerDark = Color(0xFFCCE8EC)
 
-    val TertiaryDark = Color(0xFF5CD5FF)
-    val OnTertiaryDark = Color(0xFF003541)
-    val TertiaryContainerDark = Color(0xFF004E5C)
-    val OnTertiaryContainerDark = Color(0xFFAFEDFF)
+    val TertiaryDark = Color(0xFFFFB95E)
+    val OnTertiaryDark = Color(0xFF542B00)
+    val TertiaryContainerDark = Color(0xFF773F00)
+    val OnTertiaryContainerDark = Color(0xFFFFDDB5)
 
-    val BackgroundDark = Color(0xFF121218)
-    val OnBackgroundDark = Color(0xFFE4E1E9)
-    val SurfaceDark = Color(0xFF121218)
-    val OnSurfaceDark = Color(0xFFE4E1E9)
-    val SurfaceVariantDark = Color(0xFF47464F)
-    val OnSurfaceVariantDark = Color(0xFFC9C5D0)
-    val OutlineDark = Color(0xFF928F99)
-    val OutlineVariantDark = Color(0xFF47464F)
+    val BackgroundDark = Color(0xFF10191B)
+    val OnBackgroundDark = Color(0xFFE0E9EA)
+    val SurfaceDark = Color(0xFF10191B)
+    val OnSurfaceDark = Color(0xFFE0E9EA)
+    val SurfaceVariantDark = Color(0xFF3F4A4D)
+    val OnSurfaceVariantDark = Color(0xFFBECBCD)
+    val OutlineDark = Color(0xFF899598)
+    val OutlineVariantDark = Color(0xFF3F4A4D)
 
     val SurfaceContainerLowestDark = Color(0xFF0C0C11)
-    val SurfaceContainerLowDark = Color(0xFF1A1A21)
-    val SurfaceContainerDark = Color(0xFF1E1E26)
-    val SurfaceContainerHighDark = Color(0xFF292932)
-    val SurfaceContainerHighestDark = Color(0xFF34343D)
-    val SurfaceDimDark = Color(0xFF121218)
-    val SurfaceBrightDark = Color(0xFF38383F)
+    val SurfaceContainerLowDark = Color(0xFF182225)
+    val SurfaceContainerDark = Color(0xFF1C292B)
+    val SurfaceContainerHighDark = Color(0xFF273437)
+    val SurfaceContainerHighestDark = Color(0xFF323F42)
+    val SurfaceDimDark = Color(0xFF10191B)
+    val SurfaceBrightDark = Color(0xFF39474A)
 
     val ErrorDark = Color(0xFFF2B8B5)
     val OnErrorDark = Color(0xFF601410)

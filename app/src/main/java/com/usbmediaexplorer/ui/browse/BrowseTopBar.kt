@@ -87,6 +87,18 @@ fun BrowseTopBar(
             }
         },
         actions = {
+            IconButton(onClick = reducer.sort) {
+                Icon(
+                    Icons.Outlined.Sort,
+                    contentDescription = stringResource(R.string.action_sort),
+                )
+            }
+            IconButton(onClick = reducer.viewMode) {
+                Icon(
+                    Icons.Outlined.GridView,
+                    contentDescription = stringResource(R.string.view_mode),
+                )
+            }
             IconButton(onClick = onToggleSearch) {
                 Icon(
                     if (searching) Icons.Outlined.Close else Icons.Outlined.Search,
@@ -119,20 +131,10 @@ fun BrowseTopBar(
                         enabled = canPaste,
                     )
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.action_sort)) },
-                        leadingIcon = { Icon(Icons.Outlined.Sort, null) },
-                        onClick = { onDismissOverflow(); reducer.sort() },
-                    )
-                    DropdownMenuItem(
                         text = { Text(stringResource(R.string.action_select)) },
                         leadingIcon = { Icon(Icons.Outlined.SelectAll, null) },
                         onClick = { onDismissOverflow(); reducer.select() },
                         enabled = state.items.isNotEmpty(),
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.view_mode)) },
-                        leadingIcon = { Icon(Icons.Outlined.GridView, null) },
-                        onClick = { onDismissOverflow(); reducer.viewMode() },
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(if (state.showHidden) R.string.action_hide_hidden else R.string.action_show_hidden)) },

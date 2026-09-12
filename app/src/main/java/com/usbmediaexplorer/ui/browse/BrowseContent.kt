@@ -64,6 +64,27 @@ fun BrowseContent(
                 onNavigate = { navigator.openBreadcrumb(it.uri) },
                 onHome = { navigator.home() },
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = summaryLine(state),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                if (state.loading) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                    )
+                }
+            }
         }
         if (!state.selecting) {
             if (searching) {

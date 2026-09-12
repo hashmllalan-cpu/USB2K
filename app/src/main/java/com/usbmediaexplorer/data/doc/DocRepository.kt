@@ -112,12 +112,25 @@ class DocRepository(
 
         return if (node.uri.scheme == ContentResolver.SCHEME_FILE) {
             val path = node.uri.path ?: return listOf(node)
-            val segments = path.split('/').filter { it.isNotEmpty() }
+            // The filesystem prefix is outside the volume hierarchy. Starting at "/" made
+            // Back navigate through /storage and /storage/emulated, producing an invalid root
+            // screen instead of returning to Home at the actual volume root.
+            val rootPath = volume?.rootUri?.path
+                ?.takeIf { it.isNotEmpty() && path == it || path.startsWith("$it/") }
+                ?: return listOf(node)
+            val relativePath = path.removePrefix(rootPath).trimStart('/')
+            val segments = relativePath.split('/').filter { it.isNotEmpty() }
             val trail = ArrayList<DocNode>(segments.size + 1)
-            trail += synthetic(rootLabel, Uri.fromFile(File("/")), isDirectory = true, node.volumeId, "/")
-            var acc = ""
+            trail += synthetic(
+                rootLabel,
+                Uri.fromFile(File(rootPath)),
+                isDirectory = true,
+                node.volumeId,
+                rootPath,
+            )
+            var acc = rootPath
             segments.forEachIndexed { index, segment ->
-                acc += "/$segment"
+                acc = "$acc/$segment"
                 trail += synthetic(
                     name = segment,
                     uri = Uri.fromFile(File(acc)),

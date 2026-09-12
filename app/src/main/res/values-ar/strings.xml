@@ -208,6 +208,10 @@
     <string name="player_unsupported">تعذّر تشغيل هذا الملف. قد يكون الترميز غير مدعوم من الجهاز.</string>
     <string name="player_next">التالي</string>
     <string name="player_previous">السابق</string>
+    <string name="player_volume_level">الصوت %1$d٪</string>
+    <string name="player_brightness_level">السطوع %1$d٪</string>
+    <string name="player_seek_back">ترجيع %1$s</string>
+    <string name="player_seek_forward">تقديم %1$s</string>
 
     <!-- الإعدادات -->
     <string name="settings_title">الإعدادات</string>

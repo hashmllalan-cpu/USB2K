@@ -33,6 +33,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.AspectRatio
 import androidx.compose.material.icons.outlined.Audiotrack
+import androidx.compose.material.icons.outlined.BrightnessHigh
+import androidx.compose.material.icons.outlined.BrightnessLow
+import androidx.compose.material.icons.outlined.FastForward
+import androidx.compose.material.icons.outlined.FastRewind
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material.icons.outlined.Pause
@@ -44,6 +48,8 @@ import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.ScreenRotation
 import androidx.compose.material.icons.outlined.Subtitles
+import androidx.compose.material.icons.outlined.VolumeDown
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -119,6 +125,7 @@ fun PlayerScreen(uri: String, folderUri: String) {
     var showSubtitleDialog by remember { mutableStateOf(false) }
     var scrubbing by remember { mutableStateOf(false) }
     var scrubPosition by remember { mutableFloatStateOf(0f) }
+    var gestureFeedback by remember { mutableStateOf<GestureFeedback?>(null) }
     var controlsTimer by remember { mutableStateOf(0) }
 
     // Keep the screen on while playing (settings toggle) and hide system bars.
@@ -218,6 +225,8 @@ fun PlayerScreen(uri: String, folderUri: String) {
                         baseValue = if (rightSide) readVolumeFraction(context) else readBrightness(context)
                         totalDrag = 0f
                     },
+                    onDragEnd = { gestureFeedback = null },
+                    onDragCancel = { gestureFeedback = null },
                 ) { change, dragAmount ->
                     change.consume()
                     totalDrag += dragAmount
@@ -227,16 +236,26 @@ fun PlayerScreen(uri: String, folderUri: String) {
                         )
                         .coerceIn(0f, 1f)
                     if (rightSide) setVolumeFraction(context, value) else setBrightness(context, value)
-                }
+                    gestureFeedback = GestureFeedback(
+                        kind = if (rightSide) GestureFeedbackKind.VOLUME else GestureFeedbackKind.BRIGHTNESS,
+                        value = value,
+                    )
+                )
             }
             .pointerInput(state.locked, state.durationMs) {
                 if (state.locked) return@pointerInput
+                var scrubStart = 0L
                 detectHorizontalDragGestures(
                     onDragEnd = {
                         if (scrubbing) {
                             viewModel.seekTo(scrubPosition.toLong())
                             scrubbing = false
                         }
+                        gestureFeedback = null
+                    },
+                    onDragCancel = {
+                        scrubbing = false
+                        gestureFeedback = null
                     },
                 ) { change, dragAmount ->
                     change.consume()
@@ -246,14 +265,21 @@ fun PlayerScreen(uri: String, folderUri: String) {
                         // Read, not collected: the drag start needs the current position once,
                         // and collecting it here would recompose the surface on every tick.
                         scrubPosition = viewModel.position.value.toFloat()
+                        scrubStart = scrubPosition.toLong()
                         viewModel.setControlsVisible(true)
                     }
-                    val delta = dragAmount / size.width.coerceAtLeast(1).toFloat() *
+                    // Right means rewind and left means forward, matching the user's finger.
+                    val delta = -dragAmount / size.width.coerceAtLeast(1).toFloat() *
                         state.durationMs * HORIZONTAL_GESTURE_SENSITIVITY
                     scrubPosition = (scrubPosition + delta).coerceIn(0f, state.durationMs.toFloat())
+                    gestureFeedback = GestureFeedback(
+                        kind = GestureFeedbackKind.SEEK,
+                        value = scrubPosition,
+                        deltaMs = scrubPosition.toLong() - scrubStart,
+                    )
                     controlsTimer++
                 }
-            },
+            }
     ) {
         AndroidView(
             factory = { ctx ->
@@ -272,6 +298,14 @@ fun PlayerScreen(uri: String, folderUri: String) {
         if (state.loading) {
             CircularProgressIndicator(Modifier.align(Alignment.Center))
         }
+
+        gestureFeedback?.let { feedback ->
+            GestureFeedbackOverlay(
+                feedback = feedback,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
+
 
         state.failure?.let { failure ->
             Surface(
@@ -426,8 +460,50 @@ fun PlayerScreen(uri: String, folderUri: String) {
     }
 }
 
-@Composable
+private enum class GestureFeedbackKind { VOLUME, BRIGHTNESS, SEEK }
 
+private data class GestureFeedback(
+    val kind: GestureFeedbackKind,
+    val value: Float,
+    val deltaMs: Long = 0L,
+)
+
+@Composable
+private fun GestureFeedbackOverlay(
+    feedback: GestureFeedback,
+    modifier: Modifier = Modifier,
+) {
+    val icon = when (feedback.kind) {
+        GestureFeedbackKind.VOLUME -> if (feedback.value > 0.01f) Icons.Outlined.VolumeUp else Icons.Outlined.VolumeDown
+        GestureFeedbackKind.BRIGHTNESS -> if (feedback.value > 0.5f) Icons.Outlined.BrightnessHigh else Icons.Outlined.BrightnessLow
+        GestureFeedbackKind.SEEK -> if (feedback.deltaMs < 0) Icons.Outlined.FastRewind else Icons.Outlined.FastForward
+    }
+    val label = when (feedback.kind) {
+        GestureFeedbackKind.VOLUME -> stringResource(R.string.player_volume_level, (feedback.value * 100).roundToInt())
+        GestureFeedbackKind.BRIGHTNESS -> stringResource(R.string.player_brightness_level, (feedback.value * 100).roundToInt())
+        GestureFeedbackKind.SEEK -> stringResource(
+            if (feedback.deltaMs < 0) R.string.player_seek_back else R.string.player_seek_forward,
+            Formatters.duration(kotlin.math.abs(feedback.deltaMs)),
+        )
+    }
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        color = Color.Black.copy(alpha = 0.78f),
+        contentColor = Color.White,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp))
+            Text(label, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
 private fun playbackFailureMessage(failure: PlaybackFailure): String = stringResource(
     when (failure) {
         PlaybackFailure.SOURCE_UNAVAILABLE -> R.string.player_source_unavailable

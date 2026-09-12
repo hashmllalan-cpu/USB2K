@@ -208,6 +208,10 @@
     <string name="player_unsupported">This file could not be played. The codec may be unsupported by the device.</string>
     <string name="player_next">Next</string>
     <string name="player_previous">Previous</string>
+    <string name="player_volume_level">Volume %1$d%%</string>
+    <string name="player_brightness_level">Brightness %1$d%%</string>
+    <string name="player_seek_back">Rewind %1$s</string>
+    <string name="player_seek_forward">Forward %1$s</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

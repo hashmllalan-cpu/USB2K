@@ -139,8 +139,14 @@ class FileOpsManager(
 
     fun paste(destination: DocNode) {
         val clip = _clipboard.value ?: return
-        if (clip.isCut) move(clip.items, destination) else copy(clip.items, destination)
-        if (clip.isCut) clearClipboard()
+        val jobId = if (clip.isCut) move(clip.items, destination) else copy(clip.items, destination)
+        if (clip.isCut) {
+            scope.launch {
+                val result = jobs.first { list -> list.any { it.jobId == jobId && !it.isActive } }
+                    .first { it.jobId == jobId }
+                if (result.state == JobState.DONE && _clipboard.value == clip) clearClipboard()
+            }
+        }
     }
 
     fun copy(items: List<DocNode>, destination: DocNode): String =

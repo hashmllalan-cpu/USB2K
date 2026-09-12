@@ -77,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.StateFlow
 import com.usbmediaexplorer.R
 import com.usbmediaexplorer.data.settings.AspectMode
@@ -130,6 +131,18 @@ fun PlayerScreen(uri: String, folderUri: String) {
         onDispose {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             activity?.window?.decorView?.let { showSystemBars(it) }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val activity = context as? Activity
+        val originalBrightness = activity?.window?.attributes?.screenBrightness
+        onDispose {
+            if (activity != null && originalBrightness != null && originalBrightness >= 0f) {
+                activity.window.attributes = activity.window.attributes.apply {
+                    screenBrightness = originalBrightness
+                }
+            }
         }
     }
 
@@ -196,10 +209,18 @@ fun PlayerScreen(uri: String, folderUri: String) {
             }
             .pointerInput(state.locked, state.durationMs) {
                 if (state.locked) return@pointerInput
-                detectVerticalDragGestures { change, dragAmount ->
+                var baseValue = 0f
+                var rightSide = false
+                detectVerticalDragGestures(
+                    onDragStart = { offset ->
+                        rightSide = offset.x > size.width / 2f
+                        baseValue = if (rightSide) readVolumeFraction(context) else readBrightness(context)
+                    },
+                ) { change, dragAmount ->
                     change.consume()
-                    val rightSide = change.position.x > size.width / 2f
-                    if (rightSide) adjustVolume(context, -dragAmount / 24f)
+                    val value = (baseValue - dragAmount / size.height.coerceAtLeast(1).toFloat())
+                        .coerceIn(0f, 1f)
+                    if (rightSide) setVolumeFraction(context, value) else setBrightness(context, value)
                 }
             }
             .pointerInput(state.locked, state.durationMs) {
@@ -221,7 +242,7 @@ fun PlayerScreen(uri: String, folderUri: String) {
                         scrubPosition = viewModel.position.value.toFloat()
                         viewModel.setControlsVisible(true)
                     }
-                    val delta = dragAmount * SCRUB_MS_PER_PX * (state.durationMs / 60_000f)
+                    val delta = dragAmount / size.width.coerceAtLeast(1).toFloat() * state.durationMs
                     scrubPosition = (scrubPosition + delta).coerceIn(0f, state.durationMs.toFloat())
                     controlsTimer++
                 }
@@ -444,16 +465,29 @@ private fun showSystemBars(view: View) {
     view.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
 }
 
-private fun adjustVolume(context: Context, deltaSteps: Float) {
-    val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-    val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-    val current = audio.getStreamVolume(AudioManager.STREAM_MUSIC)
-    val target = (current + deltaSteps).toInt().coerceIn(0, max)
-    if (target != current) audio.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0)
+private fun readVolumeFraction(context: Context): Float {
+    val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return 0.5f
+    val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+    return audio.getStreamVolume(AudioManager.STREAM_MUSIC) / max.toFloat()
 }
 
 private const val SEEK_STEP_MS = 10_000L
-private const val SCRUB_MS_PER_PX = 220f
+
+private fun setVolumeFraction(context: Context, fraction: Float) {
+    val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+    val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+    audio.setStreamVolume(AudioManager.STREAM_MUSIC, (fraction * max).roundToInt().coerceIn(0, max), 0)
+}
+
+private fun readBrightness(context: Context): Float =
+    (context as? Activity)?.window?.attributes?.screenBrightness?.takeIf { it >= 0f } ?: 0.5f
+
+private fun setBrightness(context: Context, fraction: Float) {
+    val activity = context as? Activity ?: return
+    activity.window.attributes = activity.window.attributes.apply {
+        screenBrightness = fraction.coerceIn(0.01f, 1f)
+    }
+}
 
 /** Compose control overlay: transport, timeline and drive-specific pickers. */
 @Composable

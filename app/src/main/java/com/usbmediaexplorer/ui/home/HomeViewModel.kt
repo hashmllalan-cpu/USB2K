@@ -148,6 +148,9 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         mediaGranted = granted
         setNeedsMediaPermission(!granted)
         if (granted) setMediaPermissionBlocked(false)
+        viewModelScope.launch {
+            container.settingsRepository.setStorageAccessWasGranted(granted)
+        }
         return changed
     }
 
@@ -219,6 +222,9 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             needsMediaPermission = !granted,
             mediaPermissionBlocked = !granted && blocked,
         )
+        viewModelScope.launch {
+            container.settingsRepository.setStorageAccessWasGranted(granted)
+        }
         // Always refresh: a partial grant ("Select photos") or a denial both change what the
         // internal storage card can show.
         refresh()

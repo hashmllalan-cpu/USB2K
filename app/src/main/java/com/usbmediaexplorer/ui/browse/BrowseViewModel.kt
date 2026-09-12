@@ -756,12 +756,17 @@ class BrowseViewModel(
 
     fun createFolder(name: String) {
         val parent = currentNode.value ?: return
-        if (name.isBlank()) {
+        val cleanName = name.trim()
+        if (cleanName.isBlank()) {
             message(context.getString(R.string.error_empty_name))
             return
         }
+        if (cleanName == "." || cleanName == ".." || cleanName.any { it == '/' || it == '\\' }) {
+            message(context.getString(R.string.error_invalid_name))
+            return
+        }
         viewModelScope.launch {
-            val created = docRepository.createDirectory(parent, name)
+            val created = docRepository.createDirectory(parent, cleanName)
             message(context.getString(createResultMessage(created, parent)))
             if (created != null) reload()
         }

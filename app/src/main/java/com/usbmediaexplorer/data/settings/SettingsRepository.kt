@@ -47,6 +47,7 @@ class SettingsRepository(private val context: Context) {
         val SHOW_MEDIA_INFO = booleanPreferencesKey("show_media_info")
         val ITEM_SCALE = stringPreferencesKey("item_scale")
         val FIRST_RUN_PERMISSIONS = booleanPreferencesKey("first_run_permissions")
+        val STORAGE_ACCESS_GRANTED = booleanPreferencesKey("storage_access_granted")
         val LAZY_METADATA = booleanPreferencesKey("lazy_metadata")
         val PER_FOLDER_VIEW = booleanPreferencesKey("per_folder_view")
         val RESUME_PROMPT = booleanPreferencesKey("resume_prompt")
@@ -95,6 +96,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setShowMediaInfo(value: Boolean) = set(Keys.SHOW_MEDIA_INFO, value)
     suspend fun setItemScale(value: ItemScale) = set(Keys.ITEM_SCALE, value.name)
     suspend fun setFirstRunPermissionsAsked(value: Boolean) = set(Keys.FIRST_RUN_PERMISSIONS, value)
+    suspend fun setStorageAccessWasGranted(value: Boolean) = set(Keys.STORAGE_ACCESS_GRANTED, value)
     suspend fun setLazyMetadata(value: Boolean) = set(Keys.LAZY_METADATA, value)
     suspend fun setRememberPerFolderView(value: Boolean) = set(Keys.PER_FOLDER_VIEW, value)
     suspend fun setResumePrompt(value: Boolean) = set(Keys.RESUME_PROMPT, value)
@@ -133,6 +135,7 @@ class SettingsRepository(private val context: Context) {
         showMediaInfo = this[Keys.SHOW_MEDIA_INFO] ?: true,
         itemScale = enumOrDefault(this[Keys.ITEM_SCALE], ItemScale.NORMAL),
         firstRunPermissionsAsked = this[Keys.FIRST_RUN_PERMISSIONS] ?: false,
+        storageAccessWasGranted = this[Keys.STORAGE_ACCESS_GRANTED] ?: false,
         lazyMetadata = this[Keys.LAZY_METADATA] ?: true,
         rememberPerFolderView = this[Keys.PER_FOLDER_VIEW] ?: true,
         resumePromptEnabled = this[Keys.RESUME_PROMPT] ?: true,
@@ -167,6 +170,7 @@ class SettingsRepository(private val context: Context) {
         this[Keys.SHOW_MEDIA_INFO] = settings.showMediaInfo
         this[Keys.ITEM_SCALE] = settings.itemScale.name
         this[Keys.FIRST_RUN_PERMISSIONS] = settings.firstRunPermissionsAsked
+        this[Keys.STORAGE_ACCESS_GRANTED] = settings.storageAccessWasGranted
         this[Keys.LAZY_METADATA] = settings.lazyMetadata
         this[Keys.PER_FOLDER_VIEW] = settings.rememberPerFolderView
         this[Keys.RESUME_PROMPT] = settings.resumePromptEnabled

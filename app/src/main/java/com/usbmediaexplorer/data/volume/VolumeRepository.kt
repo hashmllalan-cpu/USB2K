@@ -214,8 +214,10 @@ class VolumeRepository(
                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
                             Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
                     )
-                    // Opens the picker directly on the internal storage.
-                    putExtra("android.provider.extra.INITIAL_URI", Uri.fromFile(internalDir))
+                    // INITIAL_URI must be a DocumentsProvider URI; file:// is ignored by Android.
+                    initialTreeUri("primary")?.let {
+                        putExtra("android.provider.extra.INITIAL_URI", it)
+                    }
                 }
             } else {
                 null
@@ -375,12 +377,19 @@ class VolumeRepository(
                     Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
             )
             val dir = dirFile ?: uuidOf(volume)?.let { File("/storage/$it") }
-            if (dir != null) {
-                // Hidden extra honoured by the system picker: opens directly on this volume.
+            val rootId = uuidOf(volume)
+            if (rootId != null) initialTreeUri(rootId)?.let {
+                putExtra("android.provider.extra.INITIAL_URI", it)
+            } else if (dir != null) {
+                // Some OEM providers only accept the legacy file hint as a last resort.
                 putExtra("android.provider.extra.INITIAL_URI", Uri.fromFile(dir))
             }
         }
     }
+
+    private fun initialTreeUri(rootId: String): Uri? = runCatching {
+        DocumentsContract.buildRootUri("com.android.externalstorage.documents", rootId)
+    }.getOrNull()
 
     private fun uuidOf(volume: StorageVolume): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

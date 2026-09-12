@@ -142,7 +142,7 @@ fun BrowseScreen(
     }
 
     // Back means: leave selection first, then leave search, then leave the folder.
-    BackHandler(enabled = state.selecting || searching) {
+    BackHandler(enabled = state.selecting || searching || state.breadcrumb.size >= 2) {
         when {
             state.selecting -> viewModel.clearSelection()
             searching -> {
@@ -150,6 +150,7 @@ fun BrowseScreen(
                 query = ""
                 keyboard?.hide()
             }
+            state.breadcrumb.size >= 2 -> navigator.openParent(state.breadcrumb[state.breadcrumb.lastIndex - 1].uri)
         }
     }
 

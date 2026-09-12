@@ -122,6 +122,8 @@ data class AppSettings(
     // Onboarding
     /** True once the first-launch permission request has been answered (granted or denied). */
     val firstRunPermissionsAsked: Boolean = false,
+    /** True when storage access was granted at least once; used to detect a later revocation. */
+    val storageAccessWasGranted: Boolean = false,
 
     // Playback
     val resumePromptEnabled: Boolean = true,

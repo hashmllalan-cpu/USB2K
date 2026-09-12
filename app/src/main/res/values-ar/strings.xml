@@ -262,6 +262,7 @@
     <string name="error_device_disconnected">تم فصل وحدة التخزين</string>
     <string name="error_operation_failed">فشلت العملية</string>
     <string name="error_empty_name">الاسم لا يمكن أن يكون فارغًا</string>
+    <string name="error_invalid_name">اسم المجلد غير صالح</string>
     <string name="error_name_exists">يوجد عنصر بالاسم نفسه</string>
     <string name="error_no_storage_permission">لا يوجد إذن وصول للتخزين — امنحه حتى يتمكن التطبيق من إنشاء الملفات وتعديلها</string>
     <string name="error_create_failed">تعذر إنشاء العنصر هنا — أعد منح الوصول إلى هذا المجلد</string>

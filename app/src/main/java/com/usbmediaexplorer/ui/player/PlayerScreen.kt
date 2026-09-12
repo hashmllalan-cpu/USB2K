@@ -221,7 +221,10 @@ fun PlayerScreen(uri: String, folderUri: String) {
                 ) { change, dragAmount ->
                     change.consume()
                     totalDrag += dragAmount
-                    val value = (baseValue - totalDrag / size.height.coerceAtLeast(1).toFloat())
+                    val value = (
+                        baseValue - totalDrag / size.height.coerceAtLeast(1).toFloat() *
+                            VERTICAL_GESTURE_SENSITIVITY
+                        )
                         .coerceIn(0f, 1f)
                     if (rightSide) setVolumeFraction(context, value) else setBrightness(context, value)
                 }
@@ -245,7 +248,8 @@ fun PlayerScreen(uri: String, folderUri: String) {
                         scrubPosition = viewModel.position.value.toFloat()
                         viewModel.setControlsVisible(true)
                     }
-                    val delta = dragAmount / size.width.coerceAtLeast(1).toFloat() * state.durationMs
+                    val delta = dragAmount / size.width.coerceAtLeast(1).toFloat() *
+                        state.durationMs * HORIZONTAL_GESTURE_SENSITIVITY
                     scrubPosition = (scrubPosition + delta).coerceIn(0f, state.durationMs.toFloat())
                     controlsTimer++
                 }
@@ -475,6 +479,8 @@ private fun readVolumeFraction(context: Context): Float {
 }
 
 private const val SEEK_STEP_MS = 10_000L
+private const val HORIZONTAL_GESTURE_SENSITIVITY = 0.45f
+private const val VERTICAL_GESTURE_SENSITIVITY = 0.45f
 
 private fun setVolumeFraction(context: Context, fraction: Float) {
     val audio = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return

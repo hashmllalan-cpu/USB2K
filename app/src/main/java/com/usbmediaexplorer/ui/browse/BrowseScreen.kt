@@ -141,8 +141,8 @@ fun BrowseScreen(
         viewModel.messages.collect { message -> snackbarHostState.showSnackbar(message) }
     }
 
-    // Back means: leave selection first, then leave search, then leave the folder.
-    BackHandler(enabled = state.selecting || searching || state.breadcrumb.size >= 2) {
+    // Every back affordance uses the same hierarchy: selection, search, parent folder, then Home.
+    fun goBack() {
         when {
             state.selecting -> viewModel.clearSelection()
             searching -> {
@@ -151,8 +151,10 @@ fun BrowseScreen(
                 keyboard?.hide()
             }
             state.breadcrumb.size >= 2 -> navigator.openParent(state.breadcrumb[state.breadcrumb.lastIndex - 1].uri)
+            else -> if (!navigator.back()) (context as? Activity)?.finish()
         }
     }
+    BackHandler(enabled = state.selecting || searching || state.breadcrumb.size >= 2) { goBack() }
 
     fun openItem(item: DocItem) {
         when (val action = viewModel.onOpen(item)) {
@@ -227,7 +229,7 @@ fun BrowseScreen(
                     settings = { navigator.settings() },
                 ),
                 canPaste = state.canWrite && state.clipboardCount > 0,
-                onBack = { if (!navigator.back()) (context as? Activity)?.finish() },
+                onBack = ::goBack,
                 onCloseSelection = { viewModel.clearSelection() },
                 onSelectAll = { viewModel.selectAll() },
                 onInvertSelection = { viewModel.invertSelection() },

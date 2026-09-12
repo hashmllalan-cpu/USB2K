@@ -6,6 +6,7 @@ name: Build APK
 # (تدوير المفتاح المسرّب). كل الخطوات مثبّتة بـSHA الكامل لا بوسوم متحركة (تدقيق CI).
 on:
   push:
+    branches: [ 'main' ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:

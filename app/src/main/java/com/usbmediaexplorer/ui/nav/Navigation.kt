@@ -80,10 +80,10 @@ class AppNavigator(private val navController: NavHostController) {
     /** Move to the already-known parent folder, even if a restored stack lost its route entry. */
     fun openParent(uri: Uri) {
         val route = Routes.browse(uri)
-        if (!navController.popBackStack(route, inclusive = false)) {
-            navController.popBackStack()
-            navigateFolder(route)
-        }
+        // Route strings contain encoded URIs and are not reliable keys for popBackStack after
+        // state restoration. Navigating to the known parent is deterministic; the next back
+        // press then pops this parent screen normally.
+        navigateFolder(route)
     }
 
     /** Opens a folder and selects its content — the "select content" context action. */

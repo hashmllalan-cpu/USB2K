@@ -207,7 +207,7 @@ fun HomeScreen(snackbarHostState: SnackbarHostState) {
 
     // Every permission the app needs is asked for once, on first launch, in a single flow.
     LaunchedEffect(settings.firstRunPermissionsAsked) {
-        if (!settings.firstRunPermissionsAsked) showOnboarding = true
+        showOnboarding = !settings.firstRunPermissionsAsked
     }
 
     // Re-ask only when a previously granted permission was revoked. A first-run denial stays

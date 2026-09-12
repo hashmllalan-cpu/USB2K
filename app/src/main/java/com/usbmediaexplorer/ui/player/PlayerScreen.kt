@@ -211,14 +211,17 @@ fun PlayerScreen(uri: String, folderUri: String) {
                 if (state.locked) return@pointerInput
                 var baseValue = 0f
                 var rightSide = false
+                var totalDrag = 0f
                 detectVerticalDragGestures(
                     onDragStart = { offset ->
                         rightSide = offset.x > size.width / 2f
                         baseValue = if (rightSide) readVolumeFraction(context) else readBrightness(context)
+                        totalDrag = 0f
                     },
                 ) { change, dragAmount ->
                     change.consume()
-                    val value = (baseValue - dragAmount / size.height.coerceAtLeast(1).toFloat())
+                    totalDrag += dragAmount
+                    val value = (baseValue - totalDrag / size.height.coerceAtLeast(1).toFloat())
                         .coerceIn(0f, 1f)
                     if (rightSide) setVolumeFraction(context, value) else setBrightness(context, value)
                 }

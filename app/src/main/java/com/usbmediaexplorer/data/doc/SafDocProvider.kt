@@ -205,7 +205,10 @@ class SafDocProvider(
             val parentUri = documentUriFor(parent.uri) ?: return@withContext null
             runCatching {
                 val created = DocumentsContract.createDocument(resolver, parentUri, mime, name)
+                // A few USB document providers create the item but return null. Re-read the
+                // parent before reporting failure so the UI reflects the real storage state.
                 created?.let { node(it) }
+                    ?: childByName(parent, name)
             }.getOrNull()
         }
 

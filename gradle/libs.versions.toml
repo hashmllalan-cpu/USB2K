@@ -15,7 +15,7 @@ composeBom = "2024.12.01"
 # and needs the same AGP 9 upgrade. Revisit together with the BOM.
 navigation = "2.8.5"
 documentfile = "1.1.0"
-media3 = "1.11.0"
+media3 = "1.11.1"
 coil = "2.7.0"
 datastore = "1.1.1"
 coroutines = "1.11.0"

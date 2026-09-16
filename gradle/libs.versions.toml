@@ -3,7 +3,7 @@ agp = "8.7.3"
 # 2.1.x is the newest KGP line AGP 8.7.3 accepts; 2.1.20 also carries the K2
 # stabilization fixes (2.0.21 crashed in FIR checkers on CrashReportActivity).
 kotlin = "2.1.20"
-coreKtx = "1.15.0"
+coreKtx = "1.19.0"
 lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 # CEILING (2026-09-09): Compose 1.11 (BOM 2026.04.01) could not be used either — its

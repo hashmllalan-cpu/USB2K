@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4.2.2
 
       - name: Set up JDK 17
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v5.0.0
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5.0.0
         with:
           distribution: temurin
           java-version: '17'
@@ -47,7 +47,7 @@ jobs:
       # Same pin as verify.yml (VRF-02). The SHA is release v6.3.0 — the old
       # `# v4.4.0` comment was wrong and hid that the two workflows had drifted.
       - name: Set up Gradle 8.9
-        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           gradle-version: '8.9'
 
@@ -156,7 +156,7 @@ jobs:
       # الـReleases العامة (تدقيق: التوقف عن توزيع نسخة قابلة للت debugging علنًا).
       - name: Upload debug APK (development artifact)
         if: steps.build.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.0
         with:
           name: USB-Media-Explorer-debug-apk
           path: dist/USB-Media-Explorer-debug.apk
@@ -204,7 +204,7 @@ jobs:
 
       - name: Upload release APK
         if: steps.release_build.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.6.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v4.6.0
         with:
           name: USB-Media-Explorer-release-apk
           path: app/build/outputs/apk/release/app-release.apk
